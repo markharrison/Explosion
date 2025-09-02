@@ -542,43 +542,58 @@ class ExplosionEffect {
         this.particles = [];
         this.stellarRays = [];
         
-        // Create 8 main rays with shooting particles like the reference image
-        const numRays = 8;
+        // Create rays with random variation
+        const baseNumRays = 8;
+        const numRays = baseNumRays + Math.floor(Math.random() * 5); // 8-12 rays randomly
         for (let i = 0; i < numRays; i++) {
-            const angle = (i / numRays) * Math.PI * 2;
+            // Add randomness to ray angles instead of perfect spacing
+            const baseAngle = (i / numRays) * Math.PI * 2;
+            const angleVariation = (Math.random() - 0.5) * 0.3; // Random variation up to ±0.15 radians
+            const angle = baseAngle + angleVariation;
+            
             const ray = {
                 angle,
                 particles: [],
-                intensity: 1.0
+                intensity: 0.7 + Math.random() * 0.6 // Random intensity 0.7-1.3
             };
             
-            // Create distinct shooting particles along each ray
-            for (let j = 0; j < 25; j++) {
-                const speed = 80 + j * 15; // Progressive speeds for staggered effect
+            // Randomize particle count per ray
+            const particleCount = 20 + Math.floor(Math.random() * 15); // 20-34 particles per ray
+            for (let j = 0; j < particleCount; j++) {
+                // Add speed randomness
+                const baseSpeed = 80 + j * 15;
+                const speedVariation = (Math.random() - 0.5) * 30; // ±15 speed variation
+                const speed = Math.max(20, baseSpeed + speedVariation);
+                
+                // Add slight angular deviation to particles for more organic look
+                const particleAngle = angle + (Math.random() - 0.5) * 0.2; // ±0.1 radian deviation
+                
                 const particle = this.createParticle(
                     this.options.x,
                     this.options.y,
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed,
-                    3 - j * 0.08, // Progressive fade for shooting effect
-                    3 + Math.random() * 2, // Varied sizes for shooting particles
+                    Math.cos(particleAngle) * speed,
+                    Math.sin(particleAngle) * speed,
+                    2.5 + Math.random() * 1 - j * 0.06, // Random life with progressive fade
+                    2 + Math.random() * 3, // More varied sizes 2-5
                     this.options.color
                 );
-                particle.delay = j * 0.02; // Staggered release for shooting effect
+                // Random staggered delays for more organic release
+                particle.delay = j * (0.015 + Math.random() * 0.01); // 0.015-0.025 per step
                 particle.rayPosition = j;
-                particle.maxDistance = 200 + j * 8; // Maximum distance before fade
+                particle.maxDistance = 180 + j * 10 + Math.random() * 40; // Random max distance
                 ray.particles.push(particle);
             }
             
             this.stellarRays.push(ray);
         }
         
-        // Central star properties - make it more prominent
+        // Randomize central star properties for more variation
         this.centralStar = {
-            points: 8, // 8-pointed star matching the rays
-            outerRadius: 35 * this.options.size, // Larger for better visibility
-            innerRadius: 18 * this.options.size, // Proportionally larger
-            rotation: 0
+            points: 6 + Math.floor(Math.random() * 5), // 6-10 points randomly
+            outerRadius: (30 + Math.random() * 15) * this.options.size, // 30-45 radius
+            innerRadius: (15 + Math.random() * 10) * this.options.size, // 15-25 inner radius
+            rotation: Math.random() * Math.PI * 2, // Random initial rotation
+            rotationSpeed: (Math.random() - 0.5) * 0.02 // Random rotation speed
         };
     }
     
@@ -626,9 +641,14 @@ class ExplosionEffect {
      * Creates a bright star-shaped center with shooting particles like the reference image
      */
     renderStellar(progress) {
-        // Central star - bright multi-pointed star like reference image
+        // Central star - bright multi-pointed star like reference image with proper fade timing
         const starGrowth = Math.min(progress * 3, 1); // Faster initial growth
-        const starAlpha = Math.max(0, 1 - progress * 0.3); // Much slower fade for better visibility
+        const starAlpha = Math.max(0, 1 - progress); // Fade with animation progress for complete fade-out
+        
+        // Update star rotation for dynamic effect
+        if (this.centralStar.rotationSpeed) {
+            this.centralStar.rotation += this.centralStar.rotationSpeed;
+        }
         
         // Draw the central star shape (not a round orb) - make it very prominent
         if (starAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
@@ -641,7 +661,7 @@ class ExplosionEffect {
             this.ctx.shadowColor = this.options.color;
             this.ctx.shadowBlur = 60 * this.options.glowIntensity; // Larger glow
             this.ctx.fillStyle = this.options.color;
-            this.drawStar(this.options.x, this.options.y, outerRadius * 1.2, innerRadius * 1.2, this.centralStar.points);
+            this.drawStar(this.options.x, this.options.y, outerRadius * 1.2, innerRadius * 1.2, this.centralStar.points, this.centralStar.rotation);
             this.ctx.restore();
             
             // Main star body
@@ -650,7 +670,7 @@ class ExplosionEffect {
             this.ctx.shadowColor = this.options.color;
             this.ctx.shadowBlur = 40 * this.options.glowIntensity;
             this.ctx.fillStyle = this.options.color;
-            this.drawStar(this.options.x, this.options.y, outerRadius, innerRadius, this.centralStar.points);
+            this.drawStar(this.options.x, this.options.y, outerRadius, innerRadius, this.centralStar.points, this.centralStar.rotation);
             this.ctx.restore();
             
             // Bright white center star
@@ -659,7 +679,7 @@ class ExplosionEffect {
             this.ctx.shadowColor = '#ffffff';
             this.ctx.shadowBlur = 30 * this.options.glowIntensity;
             this.ctx.fillStyle = '#ffffff';
-            this.drawStar(this.options.x, this.options.y, outerRadius * 0.7, innerRadius * 0.7, this.centralStar.points);
+            this.drawStar(this.options.x, this.options.y, outerRadius * 0.7, innerRadius * 0.7, this.centralStar.points, this.centralStar.rotation);
             this.ctx.restore();
             
             // Inner bright core
@@ -668,7 +688,7 @@ class ExplosionEffect {
             this.ctx.shadowColor = '#ffffff';
             this.ctx.shadowBlur = 20 * this.options.glowIntensity;
             this.ctx.fillStyle = '#ffffff';
-            this.drawStar(this.options.x, this.options.y, outerRadius * 0.4, innerRadius * 0.4, this.centralStar.points);
+            this.drawStar(this.options.x, this.options.y, outerRadius * 0.4, innerRadius * 0.4, this.centralStar.points, this.centralStar.rotation);
             this.ctx.restore();
             
             // Central bright point
@@ -699,10 +719,10 @@ class ExplosionEffect {
                             Math.pow(particle.y - this.options.y, 2)
                         );
                         
-                        // Alpha based on progress and distance
+                        // Alpha based on progress and distance - ensure proper fade timing
                         const distanceFade = Math.max(0, 1 - distanceFromCenter / particle.maxDistance);
-                        const timeFade = Math.max(0, 1 - particleProgress * 0.8);
-                        const particleAlpha = Math.min(distanceFade, timeFade);
+                        const timeFade = Math.max(0, 1 - particleProgress); // Fade with particle progress for proper timing
+                        const particleAlpha = Math.min(distanceFade, timeFade) * ray.intensity;
                         
                         if (particleAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
                             // Draw shooting particle with distinct appearance
