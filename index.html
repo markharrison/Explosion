@@ -149,6 +149,9 @@
                             <button class="btn effect-button" data-effect="ParticleShower">
                                 <i class="fas fa-sparkles"></i> Shower
                             </button>
+                            <button class="btn effect-button" data-effect="ConfettiExplosion">
+                                <i class="fas fa-gift"></i> Confetti
+                            </button>
                         </div>
                     </div>
                     
@@ -420,6 +423,9 @@
                     case 'ParticleShower':
                         this.currentExplosion = new ParticleShower(this.canvas, options);
                         break;
+                    case 'ConfettiExplosion':
+                        this.currentExplosion = new ConfettiExplosion(this.canvas, options);
+                        break;
                 }
                 
                 this.explosionCount++;
@@ -445,7 +451,8 @@
                     'StarBurst': 'Star Burst',
                     'GlowPulse': 'Glow Pulse',
                     'FireExplosion': 'Fire Explosion',
-                    'ParticleShower': 'Particle Shower'
+                    'ParticleShower': 'Particle Shower',
+                    'ConfettiExplosion': 'Confetti Explosion'
                 };
                 document.getElementById('currentEffect').textContent = effectNames[this.currentEffect];
             }

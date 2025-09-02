@@ -537,19 +537,7 @@ class FireExplosion extends ExplosionEffect {
             });
         }
         
-        // Central fire glow
-        const coreIntensity = Math.max(0, 1 - progress * 1.5);
-        if (coreIntensity > 0) {
-            this.ctx.save();
-            this.ctx.shadowColor = '#ff6600';
-            this.ctx.shadowBlur = 40 * this.options.glowIntensity * coreIntensity;
-            this.ctx.globalAlpha = coreIntensity;
-            this.ctx.fillStyle = '#ffaa00';
-            this.ctx.beginPath();
-            this.ctx.arc(this.options.x, this.options.y, 25 * this.options.size * coreIntensity, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.restore();
-        }
+
     }
 }
 
@@ -640,6 +628,107 @@ class ParticleShower extends ExplosionEffect {
     }
 }
 
+// Confetti Effect
+class ConfettiExplosion extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            color: '#ff69b4',
+            particleCount: 80,
+            glowIntensity: 0.5,
+            duration: 3000
+        };
+        super(canvas, { ...defaults, ...options });
+        this.confettiPieces = [];
+        this.initializeConfetti();
+    }
+    
+    initializeConfetti() {
+        this.confettiPieces = [];
+        
+        // Confetti colors for celebration
+        const confettiColors = [
+            '#ff69b4', // Hot pink
+            '#00bfff', // Deep sky blue
+            '#ffd700', // Gold
+            '#32cd32', // Lime green
+            '#ff6347', // Tomato red
+            '#9370db', // Medium purple
+            '#ff8c00', // Dark orange
+            '#00ced1', // Dark turquoise
+            '#ff1493', // Deep pink
+            '#7fff00'  // Chartreuse
+        ];
+        
+        for (let i = 0; i < this.options.particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 50 + Math.random() * 150;
+            const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+            
+            const piece = {
+                x: this.options.x,
+                y: this.options.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 30, // Slight upward bias
+                width: 4 + Math.random() * 8,
+                height: 6 + Math.random() * 12,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.3,
+                color: color,
+                gravity: 100 + Math.random() * 50,
+                airResistance: 0.98,
+                life: 1,
+                flutter: Math.random() * 0.02 + 0.01 // Add flutter motion
+            };
+            
+            this.confettiPieces.push(piece);
+        }
+    }
+    
+    render(progress) {
+        if (this.confettiPieces && this.confettiPieces.length > 0) {
+            this.confettiPieces.forEach(piece => {
+                // Update position with physics
+                piece.vx *= piece.airResistance; // Air resistance
+                piece.vy += piece.gravity * progress * 0.02; // Gravity
+                
+                // Add flutter effect (horizontal sway)
+                piece.vx += Math.sin(Date.now() * piece.flutter) * 2;
+                
+                piece.x += piece.vx * progress * 0.02;
+                piece.y += piece.vy * progress * 0.02;
+                
+                // Update rotation
+                piece.rotation += piece.rotationSpeed;
+                
+                // Calculate alpha based on progress and position
+                const alpha = Math.max(0, 1 - progress * 0.8);
+                
+                if (alpha > 0) {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = alpha;
+                    
+                    // Move to piece position and rotate
+                    this.ctx.translate(piece.x, piece.y);
+                    this.ctx.rotate(piece.rotation);
+                    
+                    // Draw confetti piece as a rectangle
+                    this.ctx.fillStyle = piece.color;
+                    
+                    // Add subtle glow if enabled
+                    if (this.options.glowIntensity > 0) {
+                        this.ctx.shadowColor = piece.color;
+                        this.ctx.shadowBlur = 3 * this.options.glowIntensity;
+                    }
+                    
+                    this.ctx.fillRect(-piece.width/2, -piece.height/2, piece.width, piece.height);
+                    
+                    this.ctx.restore();
+                }
+            });
+        }
+    }
+}
+
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -649,6 +738,7 @@ if (typeof module !== 'undefined' && module.exports) {
         StarBurst,
         GlowPulse,
         FireExplosion,
-        ParticleShower
+        ParticleShower,
+        ConfettiExplosion
     };
 }

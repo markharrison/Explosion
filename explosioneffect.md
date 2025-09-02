@@ -81,7 +81,8 @@ ExplosionEffect (Base Class)
 ├── StarBurst
 ├── GlowPulse
 ├── FireExplosion
-└── ParticleShower
+├── ParticleShower
+└── ConfettiExplosion
 ```
 
 ## Built-in Effects
@@ -172,6 +173,23 @@ Creates cascading particle effects with trails and physics.
 - Particle fountains
 - Confetti-like animations
 
+### 7. ConfettiExplosion
+
+Creates realistic confetti effects with colorful paper pieces falling through the air.
+
+**Unique Properties:**
+- Rectangular confetti pieces instead of circular particles
+- Realistic paper physics with rotation and flutter
+- Bright celebratory colors (pink, blue, gold, green, etc.)
+- Air resistance and gravity simulation
+- Horizontal sway motion for realistic flutter
+
+**Best Use Cases:**
+- Celebration scenes
+- Party effects
+- Achievement notifications
+- Festive animations
+
 ## Configuration Options
 
 ### Global Options (Available for all effects)
@@ -240,6 +258,16 @@ Creates cascading particle effects with trails and physics.
     color: '#ffffff',       // Base particle color
     glowIntensity: 1,       // Particle glow intensity
     showerHeight: 200       // Maximum particle travel height
+}
+```
+
+#### ConfettiExplosion
+```javascript
+{
+    color: '#ff69b4',       // Primary confetti color (used as base for variety)
+    particleCount: 80,      // Number of confetti pieces
+    glowIntensity: 0.5,     // Subtle glow effect
+    duration: 3000          // Longer duration for realistic falling
 }
 ```
 
@@ -452,6 +480,9 @@ new FireExplosion(canvas, options)
 
 // Particle shower effect
 new ParticleShower(canvas, options)
+
+// Confetti effect
+new ConfettiExplosion(canvas, options)
 ```
 
 ## Examples
@@ -466,7 +497,8 @@ const effects = [
     { type: StarBurst, x: 550, y: 150, color: '#00aaff' },
     { type: GlowPulse, x: 150, y: 350, color: '#ffff00' },
     { type: FireExplosion, x: 350, y: 350, color: '#ff4400' },
-    { type: ParticleShower, x: 550, y: 350, color: '#ffffff' }
+    { type: ParticleShower, x: 550, y: 350, color: '#ffffff' },
+    { type: ConfettiExplosion, x: 750, y: 250, color: '#ff69b4' }
 ];
 
 // Trigger all effects with delays
@@ -493,7 +525,7 @@ canvas.addEventListener('click', (event) => {
     const y = event.clientY - rect.top;
     
     // Random effect type
-    const effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower];
+    const effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower, ConfettiExplosion];
     const EffectClass = effects[Math.floor(Math.random() * effects.length)];
     
     // Random color
@@ -538,7 +570,8 @@ const sequence = new ExplosionSequence(canvas)
     .addEffect(RingExplosion, 500, { x: 400, y: 300, color: '#00ff88', size: 1.5 })
     .addEffect(LightningBurst, 1000, { x: 400, y: 300, color: '#9966ff', size: 2 })
     .addEffect(FireExplosion, 1500, { x: 400, y: 300, color: '#ff4400', size: 1.2 })
-    .addEffect(ParticleShower, 2000, { x: 400, y: 300, color: '#ffffff', size: 0.8 });
+    .addEffect(ParticleShower, 2000, { x: 400, y: 300, color: '#ffffff', size: 0.8 })
+    .addEffect(ConfettiExplosion, 2500, { x: 400, y: 300, color: '#ff69b4', size: 1.0 });
 
 sequence.play();
 ```
@@ -553,7 +586,7 @@ class RandomExplosionGenerator {
         this.isRunning = false;
         this.timeoutId = null;
         
-        this.effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower];
+        this.effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower, ConfettiExplosion];
         this.colors = ['#9966ff', '#00ff88', '#00aaff', '#ffff00', '#ff4400', '#ffffff', '#ff00ff', '#00ffff'];
     }
     
