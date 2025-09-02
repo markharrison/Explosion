@@ -124,6 +124,7 @@ class ExplosionEffect {
         this.fireParticles = [];
         this.smokeParticles = [];
         this.confettiPieces = [];
+        this.stellarRays = [];
         
         this.initializeEffect();
         
@@ -143,6 +144,7 @@ class ExplosionEffect {
         this.fireParticles = [];
         this.smokeParticles = [];
         this.confettiPieces = [];
+        this.stellarRays = [];
         
         // Initialize based on effect type
         switch (this.options.type) {
@@ -154,6 +156,9 @@ class ExplosionEffect {
                 break;
             case 'star':
                 this.initializeStar();
+                break;
+            case 'stellar':
+                this.initializeStellar();
                 break;
             case 'glow':
                 // Glow pulse doesn't need particle initialization
@@ -244,6 +249,7 @@ class ExplosionEffect {
         this.fireParticles = [];
         this.smokeParticles = [];
         this.confettiPieces = [];
+        this.stellarRays = [];
         
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
@@ -262,6 +268,9 @@ class ExplosionEffect {
                 break;
             case 'star':
                 this.renderStar(progress);
+                break;
+            case 'stellar':
+                this.renderStellar(progress);
                 break;
             case 'glow':
                 this.renderGlow(progress);
@@ -285,6 +294,31 @@ class ExplosionEffect {
             startLife: life,
             startSize: size
         };
+    }
+    
+    // Draw a multi-pointed star shape
+    drawStar(x, y, outerRadius, innerRadius, points, rotation = 0) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(rotation);
+        this.ctx.beginPath();
+        
+        for (let i = 0; i < points * 2; i++) {
+            const angle = (i * Math.PI) / points;
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const px = Math.cos(angle) * radius;
+            const py = Math.sin(angle) * radius;
+            
+            if (i === 0) {
+                this.ctx.moveTo(px, py);
+            } else {
+                this.ctx.lineTo(px, py);
+            }
+        }
+        
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.restore();
     }
     
     updateParticle(particle, deltaTime) {
@@ -502,6 +536,66 @@ class ExplosionEffect {
             this.particles.push(particle);
         }
     }
+
+    // Stellar Effect Methods
+    initializeStellar() {
+        this.particles = [];
+        this.stellarRays = [];
+        
+        // Create rays with random variation
+        const baseNumRays = 8;
+        const numRays = baseNumRays + Math.floor(Math.random() * 5); // 8-12 rays randomly
+        for (let i = 0; i < numRays; i++) {
+            // Add randomness to ray angles instead of perfect spacing
+            const baseAngle = (i / numRays) * Math.PI * 2;
+            const angleVariation = (Math.random() - 0.5) * 0.3; // Random variation up to ±0.15 radians
+            const angle = baseAngle + angleVariation;
+            
+            const ray = {
+                angle,
+                particles: [],
+                intensity: 0.7 + Math.random() * 0.6 // Random intensity 0.7-1.3
+            };
+            
+            // Randomize particle count per ray
+            const particleCount = 20 + Math.floor(Math.random() * 15); // 20-34 particles per ray
+            for (let j = 0; j < particleCount; j++) {
+                // Add speed randomness
+                const baseSpeed = 80 + j * 15;
+                const speedVariation = (Math.random() - 0.5) * 30; // ±15 speed variation
+                const speed = Math.max(20, baseSpeed + speedVariation);
+                
+                // Add slight angular deviation to particles for more organic look
+                const particleAngle = angle + (Math.random() - 0.5) * 0.2; // ±0.1 radian deviation
+                
+                const particle = this.createParticle(
+                    this.options.x,
+                    this.options.y,
+                    Math.cos(particleAngle) * speed,
+                    Math.sin(particleAngle) * speed,
+                    2.5 + Math.random() * 1 - j * 0.06, // Random life with progressive fade
+                    2 + Math.random() * 3, // More varied sizes 2-5
+                    this.options.color
+                );
+                // Random staggered delays for more organic release
+                particle.delay = j * (0.015 + Math.random() * 0.01); // 0.015-0.025 per step
+                particle.rayPosition = j;
+                particle.maxDistance = 180 + j * 10 + Math.random() * 40; // Random max distance
+                ray.particles.push(particle);
+            }
+            
+            this.stellarRays.push(ray);
+        }
+        
+        // Randomize central star properties for more variation
+        this.centralStar = {
+            points: 6 + Math.floor(Math.random() * 5), // 6-10 points randomly
+            outerRadius: (30 + Math.random() * 15) * this.options.size, // 30-45 radius
+            innerRadius: (15 + Math.random() * 10) * this.options.size, // 15-25 inner radius
+            rotation: Math.random() * Math.PI * 2, // Random initial rotation
+            rotationSpeed: (Math.random() - 0.5) * 0.02 // Random rotation speed
+        };
+    }
     
     renderStar(progress) {
         // Draw center glow
@@ -538,6 +632,124 @@ class ExplosionEffect {
                         this.ctx.restore();
                     }
                 }
+            });
+        }
+    }
+
+    /**
+     * Stellar Effect Rendering
+     * Creates a bright star-shaped center with shooting particles like the reference image
+     */
+    renderStellar(progress) {
+        // Central star - bright multi-pointed star like reference image with proper fade timing
+        const starGrowth = Math.min(progress * 3, 1); // Faster initial growth
+        const starAlpha = Math.max(0, 1 - progress); // Fade with animation progress for complete fade-out
+        
+        // Update star rotation for dynamic effect
+        if (this.centralStar.rotationSpeed) {
+            this.centralStar.rotation += this.centralStar.rotationSpeed;
+        }
+        
+        // Draw the central star shape (not a round orb) - make it very prominent
+        if (starAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+            const outerRadius = this.centralStar.outerRadius * starGrowth;
+            const innerRadius = this.centralStar.innerRadius * starGrowth;
+            
+            // Large outer star glow
+            this.ctx.save();
+            this.ctx.globalAlpha = starAlpha * 0.9;
+            this.ctx.shadowColor = this.options.color;
+            this.ctx.shadowBlur = 60 * this.options.glowIntensity; // Larger glow
+            this.ctx.fillStyle = this.options.color;
+            this.drawStar(this.options.x, this.options.y, outerRadius * 1.2, innerRadius * 1.2, this.centralStar.points, this.centralStar.rotation);
+            this.ctx.restore();
+            
+            // Main star body
+            this.ctx.save();
+            this.ctx.globalAlpha = starAlpha;
+            this.ctx.shadowColor = this.options.color;
+            this.ctx.shadowBlur = 40 * this.options.glowIntensity;
+            this.ctx.fillStyle = this.options.color;
+            this.drawStar(this.options.x, this.options.y, outerRadius, innerRadius, this.centralStar.points, this.centralStar.rotation);
+            this.ctx.restore();
+            
+            // Bright white center star
+            this.ctx.save();
+            this.ctx.globalAlpha = starAlpha;
+            this.ctx.shadowColor = '#ffffff';
+            this.ctx.shadowBlur = 30 * this.options.glowIntensity;
+            this.ctx.fillStyle = '#ffffff';
+            this.drawStar(this.options.x, this.options.y, outerRadius * 0.7, innerRadius * 0.7, this.centralStar.points, this.centralStar.rotation);
+            this.ctx.restore();
+            
+            // Inner bright core
+            this.ctx.save();
+            this.ctx.globalAlpha = starAlpha;
+            this.ctx.shadowColor = '#ffffff';
+            this.ctx.shadowBlur = 20 * this.options.glowIntensity;
+            this.ctx.fillStyle = '#ffffff';
+            this.drawStar(this.options.x, this.options.y, outerRadius * 0.4, innerRadius * 0.4, this.centralStar.points, this.centralStar.rotation);
+            this.ctx.restore();
+            
+            // Central bright point
+            this.ctx.save();
+            this.ctx.globalAlpha = starAlpha;
+            this.ctx.shadowColor = '#ffffff';
+            this.ctx.shadowBlur = 15 * this.options.glowIntensity;
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.beginPath();
+            this.ctx.arc(this.options.x, this.options.y, outerRadius * 0.2, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+        }
+
+        // Render shooting particles along rays
+        if (this.stellarRays && this.stellarRays.length > 0) {
+            this.stellarRays.forEach(ray => {
+                ray.particles.forEach(particle => {
+                    const particleProgress = Math.max(0, progress - particle.delay);
+                    if (particleProgress > 0) {
+                        // Update particle position for shooting effect
+                        particle.x += particle.vx * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
+                        particle.y += particle.vy * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
+                        
+                        // Calculate distance from center for fade effect
+                        const distanceFromCenter = Math.sqrt(
+                            Math.pow(particle.x - this.options.x, 2) + 
+                            Math.pow(particle.y - this.options.y, 2)
+                        );
+                        
+                        // Alpha based on progress and distance - ensure proper fade timing
+                        const distanceFade = Math.max(0, 1 - distanceFromCenter / particle.maxDistance);
+                        const timeFade = Math.max(0, 1 - particleProgress); // Fade with particle progress for proper timing
+                        const particleAlpha = Math.min(distanceFade, timeFade) * ray.intensity;
+                        
+                        if (particleAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+                            // Draw shooting particle with distinct appearance
+                            this.ctx.save();
+                            this.ctx.globalAlpha = particleAlpha;
+                            this.ctx.shadowColor = particle.color;
+                            this.ctx.shadowBlur = 8 * this.options.glowIntensity;
+                            
+                            // Draw as elongated particle for shooting effect
+                            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+                            const angle = Math.atan2(particle.vy, particle.vx);
+                            
+                            this.ctx.translate(particle.x, particle.y);
+                            this.ctx.rotate(angle);
+                            
+                            // Create elongated shooting particle
+                            this.ctx.fillStyle = particle.color;
+                            this.ctx.fillRect(-particle.size * 2, -particle.size * 0.5, particle.size * 4, particle.size);
+                            
+                            // Bright center line
+                            this.ctx.fillStyle = '#ffffff';
+                            this.ctx.fillRect(-particle.size * 1.5, -particle.size * 0.25, particle.size * 3, particle.size * 0.5);
+                            
+                            this.ctx.restore();
+                        }
+                    }
+                });
             });
         }
     }
