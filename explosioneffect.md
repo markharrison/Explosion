@@ -252,6 +252,12 @@ Creates realistic confetti effects with colorful paper pieces falling through th
 }
 ```
 
+**Enhanced Features:**
+- **Smooth Fade-in**: 20% fade-in period reduces initial visual confusion
+- **Realistic Fire Particles**: Individual fire particles with color transitions from bright to dark
+- **Smoke Effects**: Delayed smoke particles with growth and transparency effects
+- **Clean Visual**: Removed distracting large circle for more authentic fire appearance
+
 #### ParticleShower
 ```javascript
 {
@@ -265,11 +271,19 @@ Creates realistic confetti effects with colorful paper pieces falling through th
 ```javascript
 {
     color: '#ff69b4',       // Primary confetti color (used as base for variety)
-    particleCount: 80,      // Number of confetti pieces
+    particleCount: 60,      // Number of confetti pieces (optimized for performance)
     glowIntensity: 0.5,     // Subtle glow effect
     duration: 3000          // Longer duration for realistic falling
 }
 ```
+
+**Enhanced Features:**
+- **Mixed Shapes**: 70% rectangles, 30% diamond-shaped pieces for visual variety
+- **Realistic Physics**: Enhanced air resistance, gravity, and flutter effects
+- **Dynamic Motion**: Twirling and horizontal sway that mimics real confetti
+- **Vibrant Colors**: 10 celebration colors including hot pink, gold, lime green, and sky blue
+- **Performance Optimized**: Reduced particle count and optimized rendering for smooth 60 FPS
+- **Complete Fade-out**: Proper alpha blending ensures no particles remain frozen on screen
 
 ## Creating Custom Effects
 
@@ -445,8 +459,9 @@ new ExplosionEffect(canvas, options)
 | Method | Description | Parameters | Returns |
 |--------|-------------|------------|---------|
 | `start()` | Start the animation | None | void |
-| `stop()` | Stop the animation | None | void |
+| `stop()` | Stop the animation and clean up | None | void |
 | `clear()` | Clear the canvas | None | void |
+| `cleanup()` | Clean up memory objects (called automatically) | None | void |
 | `render(progress)` | Render frame (override in subclasses) | progress: number (0-1) | void |
 
 #### Utility Methods
@@ -640,6 +655,34 @@ setTimeout(() => generator.stop(), 30000);
 
 ## Performance Considerations
 
+### Recent Performance Improvements
+
+1. **Automatic Memory Cleanup**
+   - All effects now automatically clean up particle arrays when animation completes
+   - Proper `cleanup()` method called on animation end and when `stop()` is invoked
+   - Prevents memory leaks in long-running applications
+
+2. **Optimized Rendering**
+   ```javascript
+   // Confetti effect improvements:
+   // - Pre-calculated time values outside particle loops
+   // - Alpha threshold checks (only render if alpha > 0.01)
+   // - Reduced glow calculations for low-alpha particles
+   // - Optimized particle count (60 vs 80) for better performance
+   ```
+
+3. **Enhanced Fade-out System**
+   ```javascript
+   // All effects now properly fade to alpha = 0 when progress = 1
+   const alpha = Math.max(0, 1 - progress); // Ensures complete fade-out
+   ```
+
+4. **Improved FPS Monitoring**
+   ```javascript
+   // Accurate frame rate measurement using requestAnimationFrame
+   // More reliable performance metrics in test application
+   ```
+
 ### Optimization Tips
 
 1. **Particle Count Management**
@@ -656,15 +699,14 @@ setTimeout(() => generator.stop(), 30000);
    canvas.height = maxSize * 0.75;
    ```
 
-3. **Effect Cleanup**
+3. **Effect Cleanup** *(Now Automatic)*
    ```javascript
-   // Always stop effects when no longer needed
+   // Effects automatically clean up when animation completes
    const explosion = new LightningBurst(canvas, options);
+   // Cleanup happens automatically after options.duration
    
-   // Stop after completion
-   setTimeout(() => {
-       explosion.stop();
-   }, options.duration);
+   // Manual cleanup is still available:
+   explosion.stop(); // Immediately stops and cleans up
    ```
 
 4. **Memory Management**
