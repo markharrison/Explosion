@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explosion Effects Library - Test Application</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        #explosionCanvas {
+            border: 2px solid #fff;
+            border-radius: 10px;
+            background: radial-gradient(circle, #0a0a0a, #1a1a1a);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .effect-button {
+            margin: 5px;
+            border-radius: 25px;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        
+        .effect-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .effect-button.active {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            transform: scale(1.05);
+        }
+        
+        .slider-container {
+            margin: 10px 0;
+        }
+        
+        .form-range {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .form-range::-webkit-slider-thumb {
+            background: #667eea;
+        }
+        
+        .form-range::-moz-range-thumb {
+            background: #667eea;
+            border: none;
+        }
+        
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .logo {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+                <h1 class="logo display-4 fw-bold">
+                    <i class="fas fa-burst"></i>
+                    Explosion Effects Library
+                </h1>
+                <p class="lead">Interactive test application for animated explosion effects</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Canvas Area -->
+            <div class="col-lg-8 col-md-7 mb-4">
+                <div class="text-center">
+                    <canvas id="explosionCanvas" width="700" height="500"></canvas>
+                    <div class="mt-3">
+                        <button id="triggerBtn" class="btn btn-danger btn-lg px-5">
+                            <i class="fas fa-bomb"></i>
+                            Trigger Explosion
+                        </button>
+                        <button id="clearBtn" class="btn btn-secondary btn-lg px-4 ms-3">
+                            <i class="fas fa-eraser"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Control Panel -->
+            <div class="col-lg-4 col-md-5">
+                <div class="control-panel p-4">
+                    <h3 class="mb-3">
+                        <i class="fas fa-sliders-h"></i>
+                        Effect Controls
+                    </h3>
+                    
+                    <!-- Effect Selection -->
+                    <div class="mb-4">
+                        <h5>Choose Effect:</h5>
+                        <div class="d-flex flex-wrap">
+                            <button class="btn effect-button active" data-effect="LightningBurst">
+                                <i class="fas fa-bolt"></i> Lightning
+                            </button>
+                            <button class="btn effect-button" data-effect="RingExplosion">
+                                <i class="fas fa-circle-notch"></i> Ring
+                            </button>
+                            <button class="btn effect-button" data-effect="StarBurst">
+                                <i class="fas fa-star"></i> Star
+                            </button>
+                            <button class="btn effect-button" data-effect="GlowPulse">
+                                <i class="fas fa-sun"></i> Glow
+                            </button>
+                            <button class="btn effect-button" data-effect="FireExplosion">
+                                <i class="fas fa-fire"></i> Fire
+                            </button>
+                            <button class="btn effect-button" data-effect="ParticleShower">
+                                <i class="fas fa-sparkles"></i> Shower
+                            </button>
+                            <button class="btn effect-button" data-effect="ConfettiExplosion">
+                                <i class="fas fa-gift"></i> Confetti
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Position Controls -->
+                    <div class="mb-4">
+                        <h5>Position:</h5>
+                        <div class="slider-container">
+                            <label for="xPosition" class="form-label">X Position: <span id="xValue">350</span></label>
+                            <input type="range" class="form-range" id="xPosition" min="50" max="650" value="350">
+                        </div>
+                        <div class="slider-container">
+                            <label for="yPosition" class="form-label">Y Position: <span id="yValue">250</span></label>
+                            <input type="range" class="form-range" id="yPosition" min="50" max="450" value="250">
+                        </div>
+                    </div>
+                    
+                    <!-- Effect Parameters -->
+                    <div class="mb-4">
+                        <h5>Parameters:</h5>
+                        <div class="slider-container">
+                            <label for="particleCount" class="form-label">Particle Count: <span id="particleCountValue">50</span></label>
+                            <input type="range" class="form-range" id="particleCount" min="10" max="200" value="50">
+                        </div>
+                        <div class="slider-container">
+                            <label for="duration" class="form-label">Duration (ms): <span id="durationValue">2000</span></label>
+                            <input type="range" class="form-range" id="duration" min="500" max="5000" value="2000" step="100">
+                        </div>
+                        <div class="slider-container">
+                            <label for="size" class="form-label">Size: <span id="sizeValue">1.0</span></label>
+                            <input type="range" class="form-range" id="size" min="0.5" max="3.0" value="1.0" step="0.1">
+                        </div>
+                        <div class="slider-container">
+                            <label for="glowIntensity" class="form-label">Glow Intensity: <span id="glowIntensityValue">1.0</span></label>
+                            <input type="range" class="form-range" id="glowIntensity" min="0" max="5" value="1.0" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <!-- Color Control -->
+                    <div class="mb-4">
+                        <h5>Color:</h5>
+                        <div class="d-flex align-items-center">
+                            <input type="color" class="form-control form-control-color" id="colorPicker" value="#9966ff" style="width: 60px;">
+                            <span class="ms-2" id="colorValue">#9966ff</span>
+                            <div class="color-preview ms-2" id="colorPreview"></div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Quick colors:</small><br>
+                            <button class="btn btn-sm" style="background: #9966ff;" onclick="setColor('#9966ff')"></button>
+                            <button class="btn btn-sm" style="background: #00ff88;" onclick="setColor('#00ff88')"></button>
+                            <button class="btn btn-sm" style="background: #00aaff;" onclick="setColor('#00aaff')"></button>
+                            <button class="btn btn-sm" style="background: #ffff00;" onclick="setColor('#ffff00')"></button>
+                            <button class="btn btn-sm" style="background: #ff4400;" onclick="setColor('#ff4400')"></button>
+                            <button class="btn btn-sm" style="background: #ffffff;" onclick="setColor('#ffffff')"></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto-play Controls -->
+                    <div class="mb-4">
+                        <h5>Auto-play:</h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoPlay">
+                            <label class="form-check-label" for="autoPlay">
+                                Continuous explosions
+                            </label>
+                        </div>
+                        <div class="slider-container" id="autoPlayInterval" style="display: none;">
+                            <label for="intervalSlider" class="form-label">Interval (ms): <span id="intervalValue">3000</span></label>
+                            <input type="range" class="form-range" id="intervalSlider" min="1000" max="10000" value="3000" step="500">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Panel -->
+                <div class="stats-panel">
+                    <h5><i class="fas fa-chart-line"></i> Statistics</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <small>Explosions Triggered:</small><br>
+                            <strong id="explosionCount">0</strong>
+                        </div>
+                        <div class="col-6">
+                            <small>Current Effect:</small><br>
+                            <strong id="currentEffect">Lightning Burst</strong>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <small>Canvas Size:</small><br>
+                            <strong>700 × 500</strong>
+                        </div>
+                        <div class="col-6">
+                            <small>Frame Rate:</small><br>
+                            <strong id="fps">60 FPS</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="control-panel p-4">
+                    <h4><i class="fas fa-info-circle"></i> Instructions</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Usage:</h6>
+                            <ul>
+                                <li>Select an effect type from the buttons above</li>
+                                <li>Adjust position, size, and other parameters</li>
+                                <li>Click "Trigger Explosion" to see the effect</li>
+                                <li>Use "Clear" to reset the canvas</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Advanced Features:</h6>
+                            <ul>
+                                <li>Enable auto-play for continuous explosions</li>
+                                <li>Experiment with different colors and glow intensities</li>
+                                <li>Try various particle counts and durations</li>
+                                <li>Click anywhere on the canvas to trigger effects at that position</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="ExplosionEffect.js"></script>
+    <script>
+        class ExplosionTestApp {
+            constructor() {
+                this.canvas = document.getElementById('explosionCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.currentEffect = 'LightningBurst';
+                this.explosionCount = 0;
+                this.currentExplosion = null;
+                this.autoPlayInterval = null;
+                this.lastFrameTime = Date.now();
+                this.fps = 60;
+                
+                this.initializeEventListeners();
+                this.updateColorPreview();
+                this.updateCurrentEffectDisplay();
+                this.startFPSCounter();
+            }
+            
+            initializeEventListeners() {
+                // Effect selection buttons
+                document.querySelectorAll('.effect-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.effect-button').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentEffect = e.target.getAttribute('data-effect');
+                        this.updateCurrentEffectDisplay();
+                    });
+                });
+                
+                // Trigger button
+                document.getElementById('triggerBtn').addEventListener('click', () => {
+                    this.triggerExplosion();
+                });
+                
+                // Clear button
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.clearCanvas();
+                });
+                
+                // Canvas click
+                this.canvas.addEventListener('click', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    this.triggerExplosion(x, y);
+                });
+                
+                // Sliders
+                this.setupSlider('xPosition', 'xValue');
+                this.setupSlider('yPosition', 'yValue');
+                this.setupSlider('particleCount', 'particleCountValue');
+                this.setupSlider('duration', 'durationValue');
+                this.setupSlider('size', 'sizeValue');
+                this.setupSlider('glowIntensity', 'glowIntensityValue');
+                this.setupSlider('intervalSlider', 'intervalValue');
+                
+                // Color picker
+                document.getElementById('colorPicker').addEventListener('input', (e) => {
+                    document.getElementById('colorValue').textContent = e.target.value;
+                    this.updateColorPreview();
+                });
+                
+                // Auto-play toggle
+                document.getElementById('autoPlay').addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        this.startAutoPlay();
+                        document.getElementById('autoPlayInterval').style.display = 'block';
+                    } else {
+                        this.stopAutoPlay();
+                        document.getElementById('autoPlayInterval').style.display = 'none';
+                    }
+                });
+                
+                // Interval slider
+                document.getElementById('intervalSlider').addEventListener('input', () => {
+                    if (document.getElementById('autoPlay').checked) {
+                        this.stopAutoPlay();
+                        this.startAutoPlay();
+                    }
+                });
+            }
+            
+            setupSlider(sliderId, valueId) {
+                const slider = document.getElementById(sliderId);
+                const valueDisplay = document.getElementById(valueId);
+                
+                slider.addEventListener('input', (e) => {
+                    valueDisplay.textContent = e.target.value;
+                });
+            }
+            
+            getEffectOptions() {
+                return {
+                    x: parseInt(document.getElementById('xPosition').value),
+                    y: parseInt(document.getElementById('yPosition').value),
+                    particleCount: parseInt(document.getElementById('particleCount').value),
+                    duration: parseInt(document.getElementById('duration').value),
+                    size: parseFloat(document.getElementById('size').value),
+                    color: document.getElementById('colorPicker').value,
+                    glowIntensity: parseFloat(document.getElementById('glowIntensity').value),
+                    autoStart: true
+                };
+            }
+            
+            triggerExplosion(x = null, y = null) {
+                if (this.currentExplosion) {
+                    this.currentExplosion.stop();
+                }
+                
+                const options = this.getEffectOptions();
+                if (x !== null && y !== null) {
+                    options.x = x;
+                    options.y = y;
+                    // Update sliders to reflect clicked position
+                    document.getElementById('xPosition').value = x;
+                    document.getElementById('yPosition').value = y;
+                    document.getElementById('xValue').textContent = Math.round(x);
+                    document.getElementById('yValue').textContent = Math.round(y);
+                }
+                
+                // Set the effect type based on current selection
+                const effectTypeMap = {
+                    'LightningBurst': 'lightning',
+                    'RingExplosion': 'ring',
+                    'StarBurst': 'star',
+                    'GlowPulse': 'glow',
+                    'FireExplosion': 'fire',
+                    'ParticleShower': 'shower',
+                    'ConfettiExplosion': 'confetti'
+                };
+                
+                options.type = effectTypeMap[this.currentEffect] || 'lightning';
+                
+                // Create the explosion effect with the specified type
+                this.currentExplosion = new ExplosionEffect(this.canvas, options);
+                
+                this.explosionCount++;
+                document.getElementById('explosionCount').textContent = this.explosionCount;
+            }
+            
+            clearCanvas() {
+                if (this.currentExplosion) {
+                    this.currentExplosion.stop();
+                }
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            updateColorPreview() {
+                const color = document.getElementById('colorPicker').value;
+                document.getElementById('colorPreview').style.backgroundColor = color;
+            }
+            
+            updateCurrentEffectDisplay() {
+                const effectNames = {
+                    'LightningBurst': 'Lightning Burst',
+                    'RingExplosion': 'Ring Explosion',
+                    'StarBurst': 'Star Burst',
+                    'GlowPulse': 'Glow Pulse',
+                    'FireExplosion': 'Fire Explosion',
+                    'ParticleShower': 'Particle Shower',
+                    'ConfettiExplosion': 'Confetti Explosion'
+                };
+                document.getElementById('currentEffect').textContent = effectNames[this.currentEffect];
+            }
+            
+            startAutoPlay() {
+                const interval = parseInt(document.getElementById('intervalSlider').value);
+                this.autoPlayInterval = setInterval(() => {
+                    // Random position
+                    const x = 100 + Math.random() * 500;
+                    const y = 100 + Math.random() * 300;
+                    this.triggerExplosion(x, y);
+                }, interval);
+            }
+            
+            stopAutoPlay() {
+                if (this.autoPlayInterval) {
+                    clearInterval(this.autoPlayInterval);
+                    this.autoPlayInterval = null;
+                }
+            }
+            
+            startFPSCounter() {
+                let lastTime = Date.now();
+                let frameCount = 0;
+                
+                const measureFPS = () => {
+                    frameCount++;
+                    const currentTime = Date.now();
+                    
+                    // Update FPS every second
+                    if (currentTime - lastTime >= 1000) {
+                        this.fps = Math.round(frameCount * 1000 / (currentTime - lastTime));
+                        document.getElementById('fps').textContent = this.fps + ' FPS';
+                        
+                        frameCount = 0;
+                        lastTime = currentTime;
+                    }
+                    
+                    requestAnimationFrame(measureFPS);
+                };
+                
+                measureFPS();
+            }
+        }
+        
+        // Global function for quick color selection
+        function setColor(color) {
+            document.getElementById('colorPicker').value = color;
+            document.getElementById('colorValue').textContent = color;
+            document.getElementById('colorPreview').style.backgroundColor = color;
+        }
+        
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.explosionApp = new ExplosionTestApp();
+        });
+    </script>
+</body>
+</html>

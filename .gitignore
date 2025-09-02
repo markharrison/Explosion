@@ -301,6 +301,12 @@ FakesAssemblies/
 .ntvs_analysis.dat
 node_modules/
 
+# Linting and development files
+package.json
+package-lock.json
+.jshintrc
+eslint.config.mjs
+
 # Visual Studio 6 build log
 *.plg
 
