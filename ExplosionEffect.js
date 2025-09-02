@@ -4,10 +4,91 @@
  * License: MIT
  */
 
+// Constants for better maintainability
+const EXPLOSION_CONSTANTS = {
+    // Animation constants
+    ANIMATION_SPEED: 0.02,
+    ANIMATION_SPEED_FIRE: 0.015,
+    ALPHA_THRESHOLD: 0.01,
+    FADE_IN_DURATION: 0.2,
+    
+    // Physics constants
+    GRAVITY_FIRE: 10,
+    GRAVITY_SHOWER: 40,
+    GRAVITY_CONFETTI_MIN: 150,
+    GRAVITY_CONFETTI_MAX: 75,
+    AIR_RESISTANCE: 0.96,
+    BOUNCE_FACTOR: 0.7,
+    FRICTION: 0.9,
+    
+    // Visual constants
+    LIGHTNING_SEGMENTS: 8,
+    LIGHTNING_OFFSET_MAX: 20,
+    RING_PARTICLE_BASE: 20,
+    RING_PARTICLE_INCREMENT: 10,
+    STAR_PARTICLES_PER_RAY: 8,
+    TRAIL_LENGTH: 8,
+    
+    // Glow and effects
+    GLOW_BLUR_BASE: 10,
+    GLOW_BLUR_LIGHTNING: 15,
+    GLOW_BLUR_FIRE: 12,
+    GLOW_BLUR_SHOWER: 8,
+    GLOW_BLUR_CONFETTI: 3,
+    SHADOW_BLUR_STAR: 40,
+    SHADOW_BLUR_RING: 20,
+    SHADOW_BLUR_GLOW: 30,
+    SHADOW_BLUR_CORE: 50,
+    
+    // Sizes
+    CORE_SIZE_BASE: 15,
+    CORE_SIZE_STAR: 20,
+    PARTICLE_SIZE_BASE: 3,
+    LINE_WIDTH_LIGHTNING: 3,
+    LINE_WIDTH_RING: 4,
+    LINE_WIDTH_GLOW: 3,
+    
+    // Colors and effects
+    FIRE_HUE_MIN: 10,
+    FIRE_HUE_MAX: 30,
+    FIRE_SATURATION: 0.9,
+    FIRE_LIGHTNESS: 0.6,
+    SMOKE_LIGHTNESS: 0.3,
+    CONFETTI_SHAPES: {
+        RECTANGLE_RATIO: 0.7,
+        DIAMOND_RATIO: 0.3
+    }
+};
+
 class ExplosionEffect {
+    /**
+     * Create a new ExplosionEffect instance
+     * @param {HTMLCanvasElement} canvas - The canvas element to render on
+     * @param {Object} options - Configuration options for the effect
+     * @param {string} options.type - Effect type ('lightning', 'ring', 'star', 'glow', 'fire', 'shower', 'confetti')
+     * @param {number} options.x - X position (default: canvas center)
+     * @param {number} options.y - Y position (default: canvas center)
+     * @param {number} options.particleCount - Number of particles (default: 50)
+     * @param {number} options.duration - Animation duration in ms (default: 2000)
+     * @param {number} options.size - Size multiplier (default: 1)
+     * @param {string} options.color - Effect color (default: '#ffffff')
+     * @param {number} options.glowIntensity - Glow intensity (default: 1)
+     * @param {boolean} options.autoStart - Auto-start animation (default: true)
+     * @throws {Error} When canvas is invalid or 2D context unavailable
+     */
     constructor(canvas, options = {}) {
+        // Input validation
+        if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+            throw new Error('ExplosionEffect requires a valid HTML Canvas element');
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Unable to get 2D rendering context from canvas');
+        }
+        
         this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+        this.ctx = ctx;
         this.animationId = null;
         this.isRunning = false;
         
@@ -48,6 +129,10 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Initialize effect based on the selected type
+     * Routes to appropriate initialization method
+     */
     initializeEffect() {
         // Clear all arrays
         this.particles = [];
@@ -86,6 +171,9 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Start the explosion animation
+     */
     start() {
         if (!this.isRunning) {
             this.isRunning = true;
@@ -94,6 +182,9 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Stop the animation and clean up resources
+     */
     stop() {
         this.isRunning = false;
         if (this.animationId) {
@@ -103,28 +194,46 @@ class ExplosionEffect {
         this.cleanup();
     }
     
+    /**
+     * Clear the canvas safely with error handling
+     */
     clear() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-    
-    animate() {
-        if (!this.isRunning) return;
-        
-        this.clear();
-        
-        const elapsed = Date.now() - this.startTime;
-        const progress = Math.min(elapsed / this.options.duration, 1);
-        
-        this.render(progress);
-        
-        if (progress < 1) {
-            this.animationId = requestAnimationFrame(() => this.animate());
-        } else {
-            this.isRunning = false;
-            this.cleanup();
+        try {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        } catch (error) {
+            console.warn('Failed to clear canvas:', error);
         }
     }
     
+    /**
+     * Animation loop with error handling
+     */
+    animate() {
+        if (!this.isRunning) return;
+        
+        try {
+            this.clear();
+            
+            const elapsed = Date.now() - this.startTime;
+            const progress = Math.min(elapsed / this.options.duration, 1);
+            
+            this.render(progress);
+            
+            if (progress < 1) {
+                this.animationId = requestAnimationFrame(() => this.animate());
+            } else {
+                this.isRunning = false;
+                this.cleanup();
+            }
+        } catch (error) {
+            console.error('Animation error:', error);
+            this.stop(); // Stop animation on error to prevent infinite loops
+        }
+    }
+    
+    /**
+     * Clean up all particle arrays and animation resources
+     */
     cleanup() {
         // Clean up all particle arrays and memory objects
         this.particles = [];
@@ -233,9 +342,9 @@ class ExplosionEffect {
             };
             
             // Create jagged lightning segments
-            for (let j = 0; j < 8; j++) {
-                const length = (j + 1) * bolt.maxLength / 8;
-                const offset = (Math.random() - 0.5) * 20;
+            for (let j = 0; j < EXPLOSION_CONSTANTS.LIGHTNING_SEGMENTS; j++) {
+                const length = (j + 1) * bolt.maxLength / EXPLOSION_CONSTANTS.LIGHTNING_SEGMENTS;
+                const offset = (Math.random() - 0.5) * EXPLOSION_CONSTANTS.LIGHTNING_OFFSET_MAX;
                 bolt.segments.push({ length, offset });
             }
             
@@ -250,11 +359,11 @@ class ExplosionEffect {
         // Draw central glow
         this.ctx.save();
         this.ctx.shadowColor = this.options.color;
-        this.ctx.shadowBlur = 30 * this.options.glowIntensity * centerGlow;
+        this.ctx.shadowBlur = EXPLOSION_CONSTANTS.SHADOW_BLUR_RING * this.options.glowIntensity * centerGlow;
         this.ctx.globalAlpha = centerGlow;
         this.ctx.fillStyle = this.options.color;
         this.ctx.beginPath();
-        this.ctx.arc(this.options.x, this.options.y, 15 * this.options.size * centerGlow, 0, Math.PI * 2);
+        this.ctx.arc(this.options.x, this.options.y, EXPLOSION_CONSTANTS.CORE_SIZE_BASE * this.options.size * centerGlow, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.restore();
         
@@ -263,16 +372,13 @@ class ExplosionEffect {
             this.lightningBolts.forEach(bolt => {
                 this.ctx.save();
                 this.ctx.strokeStyle = bolt.color;
-                this.ctx.lineWidth = 3 * this.options.size;
+                this.ctx.lineWidth = EXPLOSION_CONSTANTS.LINE_WIDTH_LIGHTNING * this.options.size;
                 this.ctx.shadowColor = bolt.color;
-                this.ctx.shadowBlur = 15 * this.options.glowIntensity;
+                this.ctx.shadowBlur = EXPLOSION_CONSTANTS.GLOW_BLUR_LIGHTNING * this.options.glowIntensity;
                 this.ctx.globalAlpha = lightningIntensity;
                 
                 this.ctx.beginPath();
                 this.ctx.moveTo(this.options.x, this.options.y);
-                
-                let currentX = this.options.x;
-                let currentY = this.options.y;
                 
                 bolt.segments.forEach(segment => {
                     const targetX = this.options.x + Math.cos(bolt.angle) * segment.length * progress;
@@ -281,8 +387,6 @@ class ExplosionEffect {
                     const offsetY = Math.sin(bolt.angle + Math.PI / 2) * segment.offset;
                     
                     this.ctx.lineTo(targetX + offsetX, targetY + offsetY);
-                    currentX = targetX + offsetX;
-                    currentY = targetY + offsetY;
                 });
                 
                 this.ctx.stroke();
@@ -295,7 +399,7 @@ class ExplosionEffect {
     initializeRing() {
         this.particles = [];
         for (let ring = 0; ring < this.options.ringCount; ring++) {
-            const particlesPerRing = 20 + ring * 10;
+            const particlesPerRing = EXPLOSION_CONSTANTS.RING_PARTICLE_BASE + ring * EXPLOSION_CONSTANTS.RING_PARTICLE_INCREMENT;
             for (let i = 0; i < particlesPerRing; i++) {
                 const angle = (i / particlesPerRing) * Math.PI * 2;
                 const speed = 50 + ring * 30;
@@ -305,7 +409,7 @@ class ExplosionEffect {
                     Math.cos(angle) * speed,
                     Math.sin(angle) * speed,
                     2 - ring * 0.3,
-                    3 + ring,
+                    EXPLOSION_CONSTANTS.PARTICLE_SIZE_BASE + ring,
                     this.options.color
                 );
                 particle.ring = ring;
@@ -318,21 +422,23 @@ class ExplosionEffect {
         // Update and draw particles
         if (this.particles && this.particles.length > 0) {
             this.particles.forEach(particle => {
-                particle.x += particle.vx * progress * 0.02;
-                particle.y += particle.vy * progress * 0.02;
+                particle.x += particle.vx * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
+                particle.y += particle.vy * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
                 
                 const ringProgress = Math.max(0, progress - particle.ring * 0.1);
                 const alpha = Math.max(0, 1 - ringProgress);
                 
-                this.ctx.save();
-                this.ctx.globalAlpha = alpha;
-                this.ctx.shadowColor = particle.color;
-                this.ctx.shadowBlur = 8 * this.options.glowIntensity;
-                this.ctx.fillStyle = particle.color;
-                this.ctx.beginPath();
-                this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.restore();
+                if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = alpha;
+                    this.ctx.shadowColor = particle.color;
+                    this.ctx.shadowBlur = EXPLOSION_CONSTANTS.GLOW_BLUR_SHOWER * this.options.glowIntensity;
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                }
             });
         }
         
@@ -342,9 +448,9 @@ class ExplosionEffect {
         
         this.ctx.save();
         this.ctx.strokeStyle = this.options.color;
-        this.ctx.lineWidth = 4 * this.options.size;
+        this.ctx.lineWidth = EXPLOSION_CONSTANTS.LINE_WIDTH_RING * this.options.size;
         this.ctx.shadowColor = this.options.color;
-        this.ctx.shadowBlur = 20 * this.options.glowIntensity;
+        this.ctx.shadowBlur = EXPLOSION_CONSTANTS.SHADOW_BLUR_RING * this.options.glowIntensity;
         this.ctx.globalAlpha = ringAlpha;
         this.ctx.beginPath();
         this.ctx.arc(this.options.x, this.options.y, ringRadius, 0, Math.PI * 2);
@@ -361,7 +467,7 @@ class ExplosionEffect {
             const speed = 120;
             
             // Multiple particles per ray
-            for (let j = 0; j < 8; j++) {
+            for (let j = 0; j < EXPLOSION_CONSTANTS.STAR_PARTICLES_PER_RAY; j++) {
                 const particle = this.createParticle(
                     this.options.x,
                     this.options.y,
@@ -399,11 +505,11 @@ class ExplosionEffect {
         const centerGlow = Math.max(0, 1 - progress * 2);
         this.ctx.save();
         this.ctx.shadowColor = this.options.color;
-        this.ctx.shadowBlur = 40 * this.options.glowIntensity * centerGlow;
+        this.ctx.shadowBlur = EXPLOSION_CONSTANTS.SHADOW_BLUR_STAR * this.options.glowIntensity * centerGlow;
         this.ctx.globalAlpha = centerGlow;
         this.ctx.fillStyle = this.options.color;
         this.ctx.beginPath();
-        this.ctx.arc(this.options.x, this.options.y, 20 * this.options.size * centerGlow, 0, Math.PI * 2);
+        this.ctx.arc(this.options.x, this.options.y, EXPLOSION_CONSTANTS.CORE_SIZE_STAR * this.options.size * centerGlow, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.restore();
         
@@ -412,26 +518,31 @@ class ExplosionEffect {
             this.particles.forEach(particle => {
                 const particleProgress = Math.max(0, progress - particle.delay);
                 if (particleProgress > 0) {
-                    particle.x += particle.vx * particleProgress * 0.02;
-                    particle.y += particle.vy * particleProgress * 0.02;
+                    particle.x += particle.vx * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
+                    particle.y += particle.vy * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
                     
                     const alpha = Math.max(0, 1 - particleProgress);
                     
-                    this.ctx.save();
-                    this.ctx.globalAlpha = alpha;
-                    this.ctx.shadowColor = particle.color;
-                    this.ctx.shadowBlur = 6 * this.options.glowIntensity;
-                    this.ctx.fillStyle = particle.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    this.ctx.restore();
+                    if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+                        this.ctx.save();
+                        this.ctx.globalAlpha = alpha;
+                        this.ctx.shadowColor = particle.color;
+                        this.ctx.shadowBlur = 6 * this.options.glowIntensity;
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.restore();
+                    }
                 }
             });
         }
     }
     
-    // Glow Effect Methods
+    /**
+     * Glow Effect Rendering
+     * Creates pulsing rings with central core
+     */
     renderGlow(progress) {
         const pulseFreq = 8;
         const pulse = Math.sin(progress * Math.PI * pulseFreq) * 0.5 + 0.5;
@@ -443,39 +554,44 @@ class ExplosionEffect {
             const radius = ringProgress * 80 * this.options.size;
             const alpha = (1 - ringProgress) * overallIntensity * (0.8 + pulse * 0.4);
             
-            this.ctx.save();
-            this.ctx.globalAlpha = alpha;
-            this.ctx.shadowColor = this.options.color;
-            this.ctx.shadowBlur = 30 * this.options.glowIntensity * alpha;
-            
-            // Filled circle
-            this.ctx.fillStyle = this.options.color;
-            this.ctx.beginPath();
-            this.ctx.arc(this.options.x, this.options.y, radius, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Ring outline
-            this.ctx.strokeStyle = this.options.color;
-            this.ctx.lineWidth = 3 * this.options.size;
-            this.ctx.beginPath();
-            this.ctx.arc(this.options.x, this.options.y, radius + 10, 0, Math.PI * 2);
-            this.ctx.stroke();
-            
-            this.ctx.restore();
+            if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+                this.ctx.save();
+                this.ctx.globalAlpha = alpha;
+                this.ctx.shadowColor = this.options.color;
+                this.ctx.shadowBlur = EXPLOSION_CONSTANTS.SHADOW_BLUR_GLOW * this.options.glowIntensity * alpha;
+                
+                // Filled circle
+                this.ctx.fillStyle = this.options.color;
+                this.ctx.beginPath();
+                this.ctx.arc(this.options.x, this.options.y, radius, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Ring outline
+                this.ctx.strokeStyle = this.options.color;
+                this.ctx.lineWidth = EXPLOSION_CONSTANTS.LINE_WIDTH_GLOW * this.options.size;
+                this.ctx.beginPath();
+                this.ctx.arc(this.options.x, this.options.y, radius + 10, 0, Math.PI * 2);
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
         }
         
         // Central bright core with proper fade-out
-        const coreSize = 15 * this.options.size * (1 + pulse * 0.5);
+        const coreSize = EXPLOSION_CONSTANTS.CORE_SIZE_BASE * this.options.size * (1 + pulse * 0.5);
         const coreAlpha = overallIntensity; // Ensure core fades out with overall intensity
-        this.ctx.save();
-        this.ctx.globalAlpha = coreAlpha;
-        this.ctx.shadowColor = this.options.color;
-        this.ctx.shadowBlur = 50 * this.options.glowIntensity * coreAlpha;
-        this.ctx.fillStyle = this.options.color;
-        this.ctx.beginPath();
-        this.ctx.arc(this.options.x, this.options.y, coreSize, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.restore();
+        
+        if (coreAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+            this.ctx.save();
+            this.ctx.globalAlpha = coreAlpha;
+            this.ctx.shadowColor = this.options.color;
+            this.ctx.shadowBlur = EXPLOSION_CONSTANTS.SHADOW_BLUR_CORE * this.options.glowIntensity * coreAlpha;
+            this.ctx.fillStyle = this.options.color;
+            this.ctx.beginPath();
+            this.ctx.arc(this.options.x, this.options.y, coreSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+        }
     }
     
     // Fire Effect Methods
@@ -487,18 +603,18 @@ class ExplosionEffect {
         for (let i = 0; i < this.options.particleCount; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 20 + Math.random() * 80;
-            const hue = 10 + Math.random() * 30; // Orange to red range
+            const hue = EXPLOSION_CONSTANTS.FIRE_HUE_MIN + Math.random() * EXPLOSION_CONSTANTS.FIRE_HUE_MAX; // Orange to red range
             const particle = this.createParticle(
                 this.options.x,
                 this.options.y,
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed - 20, // Slight upward bias
                 1.5 + Math.random(),
-                3 + Math.random() * 4,
-                this.hslToRgb(hue, 0.9, 0.6)
+                EXPLOSION_CONSTANTS.PARTICLE_SIZE_BASE + Math.random() * 4,
+                this.hslToRgb(hue, EXPLOSION_CONSTANTS.FIRE_SATURATION, EXPLOSION_CONSTANTS.FIRE_LIGHTNESS)
             );
-            particle.gravity = 10;
-            particle.originalColor = { h: hue, s: 0.9, l: 0.6 };
+            particle.gravity = EXPLOSION_CONSTANTS.GRAVITY_FIRE;
+            particle.originalColor = { h: hue, s: EXPLOSION_CONSTANTS.FIRE_SATURATION, l: EXPLOSION_CONSTANTS.FIRE_LIGHTNESS };
             this.fireParticles.push(particle);
         }
         
@@ -512,8 +628,8 @@ class ExplosionEffect {
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed - 30,
                 2 + Math.random() * 2,
-                2 + Math.random() * 3,
-                this.hslToRgb(0, 0, 0.3)
+                2 + Math.random() * EXPLOSION_CONSTANTS.PARTICLE_SIZE_BASE,
+                this.hslToRgb(0, 0, EXPLOSION_CONSTANTS.SMOKE_LIGHTNESS)
             );
             particle.delay = Math.random() * 0.5;
             particle.growth = 1 + Math.random() * 2;
@@ -522,15 +638,15 @@ class ExplosionEffect {
     }
     
     renderFire(progress) {
-        // Add fade-in effect for the first 20% of the animation
-        const fadeInProgress = Math.min(progress / 0.2, 1);
+        // Add fade-in effect for the first portion of the animation
+        const fadeInProgress = Math.min(progress / EXPLOSION_CONSTANTS.FADE_IN_DURATION, 1);
         const fadeInFactor = fadeInProgress;
         
         // Update and draw fire particles
         if (this.fireParticles && this.fireParticles.length > 0) {
             this.fireParticles.forEach(particle => {
-                particle.x += particle.vx * progress * 0.02;
-                particle.y += particle.vy * progress * 0.02 + particle.gravity * progress * 0.01;
+                particle.x += particle.vx * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
+                particle.y += particle.vy * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED + particle.gravity * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED / 2;
                 
                 // Color transition from bright to dark
                 const colorProgress = progress;
@@ -540,11 +656,11 @@ class ExplosionEffect {
                 // Apply both fade-in and fade-out
                 const alpha = Math.max(0, (1 - progress) * fadeInFactor);
                 
-                if (alpha > 0.01) {
+                if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
                     this.ctx.save();
                     this.ctx.globalAlpha = alpha;
                     this.ctx.shadowColor = particle.color;
-                    this.ctx.shadowBlur = 12 * this.options.glowIntensity * alpha;
+                    this.ctx.shadowBlur = EXPLOSION_CONSTANTS.GLOW_BLUR_FIRE * this.options.glowIntensity * alpha;
                     this.ctx.fillStyle = particle.color;
                     this.ctx.beginPath();
                     this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
@@ -559,15 +675,15 @@ class ExplosionEffect {
             this.smokeParticles.forEach(particle => {
                 const smokeProgress = Math.max(0, progress - particle.delay);
                 if (smokeProgress > 0) {
-                    particle.x += particle.vx * smokeProgress * 0.015;
-                    particle.y += particle.vy * smokeProgress * 0.015;
+                    particle.x += particle.vx * smokeProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_FIRE;
+                    particle.y += particle.vy * smokeProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_FIRE;
                     particle.size = particle.startSize * (1 + particle.growth * smokeProgress);
                     
                     // Ensure complete fade-out by adjusting for delay
                     const adjustedProgress = Math.min(1, smokeProgress / (1 - particle.delay));
                     const alpha = Math.max(0, (1 - adjustedProgress) * 0.6 * fadeInFactor);
                     
-                    if (alpha > 0.01) { // Only render if alpha is significant
+                    if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
                         this.ctx.save();
                         this.ctx.globalAlpha = alpha;
                         this.ctx.fillStyle = particle.color;
@@ -768,6 +884,7 @@ class ExplosionEffect {
 }
 
 // Export for use
+/* global module */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { ExplosionEffect };
 }
