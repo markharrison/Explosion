@@ -2,7 +2,7 @@
 
 ## Overview
 
-The ExplosionEffect library is a comprehensive JavaScript library for creating animated explosion effects using HTML5 Canvas. It provides a unified API for seven distinct explosion effect types through a single class, with particle systems, glow effects, automatic memory management, and configurable parameters.
+The ExplosionEffect library is a comprehensive JavaScript library for creating animated explosion effects using HTML5 Canvas. It provides a unified API for eight distinct explosion effect types through a single class, with particle systems, glow effects, automatic memory management, and configurable parameters.
 
 ## Table of Contents
 
@@ -73,6 +73,7 @@ The library now uses a **single `ExplosionEffect` class** with configurable effe
 | `'lightning'` | Electric lightning bolts radiating from center |
 | `'ring'` | Concentric rings of particles expanding outward |
 | `'star'` | Multi-ray star explosions with delayed particle release |
+| `'stellar'` | Spectacular stellar explosions with growing translucent orb |
 | `'glow'` | Pulsing energy waves with intense glow effects |
 | `'fire'` | Realistic fire and smoke with smooth fade-in |
 | `'shower'` | Cascading particles with trails and bounce physics |
@@ -133,7 +134,28 @@ const star = new ExplosionEffect(canvas, {
 **Specific Options:**
 - `starPoints`: Number of star points/rays (default: 8)
 
-### 4. Glow Pulse (`type: 'glow'`)
+### 4. Stellar Burst (`type: 'stellar'`)
+
+Spectacular stellar explosions featuring a growing translucent orb at the center with intense radiating particles in multiple rays, creating a stellar appearance.
+
+```javascript
+const stellar = new ExplosionEffect(canvas, {
+    type: 'stellar',
+    x: 400,
+    y: 300,
+    color: '#ff4400',
+    particleCount: 50,
+    glowIntensity: 2.5
+});
+```
+
+**Features:**
+- Central translucent orb that grows over time
+- 12 prominent rays with staggered particle release
+- Sparkle particles for enhanced stellar effect
+- Multiple glow layers for depth
+
+### 5. Glow Pulse (`type: 'glow'`)
 
 Pulsing energy waves with intense glow and multiple concentric rings.
 
@@ -151,7 +173,7 @@ const glow = new ExplosionEffect(canvas, {
 **Specific Options:**
 - `pulseCount`: Number of pulsing rings (default: 4)
 
-### 5. Fire Explosion (`type: 'fire'`)
+### 6. Fire Explosion (`type: 'fire'`)
 
 Realistic fire and smoke particles with smooth fade-in and enhanced visual clarity.
 
@@ -169,7 +191,7 @@ const fire = new ExplosionEffect(canvas, {
 **Specific Options:**
 - `smokeParticles`: Number of smoke particles (default: 30)
 
-### 6. Particle Shower (`type: 'shower'`)
+### 7. Particle Shower (`type: 'shower'`)
 
 Cascading particles with trails, bounce physics, and random colors.
 
@@ -187,7 +209,7 @@ const shower = new ExplosionEffect(canvas, {
 **Specific Options:**
 - `showerHeight`: Height effect parameter (default: 200)
 
-### 7. Confetti Explosion (`type: 'confetti'`)
+### 8. Confetti Explosion (`type: 'confetti'`)
 
 Enhanced celebration effect with mixed shapes, realistic physics, and optimized performance.
 
