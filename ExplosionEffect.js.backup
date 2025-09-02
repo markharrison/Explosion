@@ -8,12 +8,12 @@ class ExplosionEffect {
     constructor(canvas, options = {}) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+        this.effects = [];
         this.animationId = null;
         this.isRunning = false;
         
         // Default options
         this.defaultOptions = {
-            type: 'lightning', // Effect type
             x: canvas.width / 2,
             y: canvas.height / 2,
             particleCount: 50,
@@ -21,68 +21,14 @@ class ExplosionEffect {
             size: 1,
             color: '#ffffff',
             glowIntensity: 1,
-            autoStart: true,
-            // Effect-specific defaults
-            lightningCount: 12,
-            ringCount: 3,
-            starPoints: 8,
-            pulseCount: 4,
-            smokeParticles: 30,
-            showerHeight: 200
+            autoStart: true
         };
         
         this.options = { ...this.defaultOptions, ...options };
         this.startTime = Date.now();
         
-        // Initialize particles and effect-specific data
-        this.particles = [];
-        this.lightningBolts = [];
-        this.fireParticles = [];
-        this.smokeParticles = [];
-        this.confettiPieces = [];
-        
-        this.initializeEffect();
-        
         if (this.options.autoStart) {
             this.start();
-        }
-    }
-    
-    initializeEffect() {
-        // Clear all arrays
-        this.particles = [];
-        this.lightningBolts = [];
-        this.fireParticles = [];
-        this.smokeParticles = [];
-        this.confettiPieces = [];
-        
-        // Initialize based on effect type
-        switch (this.options.type) {
-            case 'lightning':
-                this.initializeLightning();
-                break;
-            case 'ring':
-                this.initializeRing();
-                break;
-            case 'star':
-                this.initializeStar();
-                break;
-            case 'glow':
-                // Glow pulse doesn't need particle initialization
-                break;
-            case 'fire':
-                this.initializeFire();
-                break;
-            case 'shower':
-                this.initializeShower();
-                break;
-            case 'confetti':
-                this.initializeConfetti();
-                break;
-            default:
-                console.warn('Unknown effect type:', this.options.type);
-                this.options.type = 'lightning';
-                this.initializeLightning();
         }
     }
     
@@ -100,7 +46,7 @@ class ExplosionEffect {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
-        this.cleanup();
+        this.cleanup(); // Ensure cleanup is called when stopping
     }
     
     clear() {
@@ -121,18 +67,12 @@ class ExplosionEffect {
             this.animationId = requestAnimationFrame(() => this.animate());
         } else {
             this.isRunning = false;
-            this.cleanup();
+            this.cleanup(); // Clean up memory when animation ends
         }
     }
     
     cleanup() {
-        // Clean up all particle arrays and memory objects
-        this.particles = [];
-        this.lightningBolts = [];
-        this.fireParticles = [];
-        this.smokeParticles = [];
-        this.confettiPieces = [];
-        
+        // Override in subclasses to clean up particle arrays and other memory objects
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
@@ -140,30 +80,7 @@ class ExplosionEffect {
     }
     
     render(progress) {
-        // Route to appropriate render method based on effect type
-        switch (this.options.type) {
-            case 'lightning':
-                this.renderLightning(progress);
-                break;
-            case 'ring':
-                this.renderRing(progress);
-                break;
-            case 'star':
-                this.renderStar(progress);
-                break;
-            case 'glow':
-                this.renderGlow(progress);
-                break;
-            case 'fire':
-                this.renderFire(progress);
-                break;
-            case 'shower':
-                this.renderShower(progress);
-                break;
-            case 'confetti':
-                this.renderConfetti(progress);
-                break;
-        }
+        // Override in subclasses
     }
     
     // Utility methods for effects
@@ -219,10 +136,23 @@ class ExplosionEffect {
         
         return `rgb(${Math.round((r + m) * 255)}, ${Math.round((g + m) * 255)}, ${Math.round((b + m) * 255)})`;
     }
-    
-    // Lightning Effect Methods
-    initializeLightning() {
+}
+
+// Lightning Burst Effect
+class LightningBurst extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            lightningCount: 12,
+            color: '#9966ff',
+            glowIntensity: 2
+        };
+        super(canvas, { ...defaults, ...options });
         this.lightningBolts = [];
+        this.initializeLightning();
+    }
+    
+    initializeLightning() {
+        this.lightningBolts = []; // Ensure array is initialized
         for (let i = 0; i < this.options.lightningCount; i++) {
             const angle = (i / this.options.lightningCount) * Math.PI * 2;
             const bolt = {
@@ -243,7 +173,7 @@ class ExplosionEffect {
         }
     }
     
-    renderLightning(progress) {
+    render(progress) {
         const centerGlow = 1 - progress;
         const lightningIntensity = Math.sin(progress * Math.PI) * 2;
         
@@ -291,9 +221,27 @@ class ExplosionEffect {
         }
     }
     
-    // Ring Effect Methods
-    initializeRing() {
+    cleanup() {
+        super.cleanup();
+        this.lightningBolts = []; // Clear lightning bolts array to free memory
+    }
+}
+
+// Ring Explosion Effect
+class RingExplosion extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            ringCount: 3,
+            color: '#00ff88',
+            glowIntensity: 1.5
+        };
+        super(canvas, { ...defaults, ...options });
         this.particles = [];
+        this.initializeParticles();
+    }
+    
+    initializeParticles() {
+        this.particles = []; // Ensure array is initialized
         for (let ring = 0; ring < this.options.ringCount; ring++) {
             const particlesPerRing = 20 + ring * 10;
             for (let i = 0; i < particlesPerRing; i++) {
@@ -314,7 +262,7 @@ class ExplosionEffect {
         }
     }
     
-    renderRing(progress) {
+    render(progress) {
         // Update and draw particles
         if (this.particles && this.particles.length > 0) {
             this.particles.forEach(particle => {
@@ -352,9 +300,27 @@ class ExplosionEffect {
         this.ctx.restore();
     }
     
-    // Star Effect Methods
-    initializeStar() {
+    cleanup() {
+        super.cleanup();
+        this.particles = []; // Clear particles array to free memory
+    }
+}
+
+// Star Burst Effect
+class StarBurst extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            starPoints: 8,
+            color: '#00aaff',
+            glowIntensity: 1.8
+        };
+        super(canvas, { ...defaults, ...options });
         this.particles = [];
+        this.initializeParticles();
+    }
+    
+    initializeParticles() {
+        this.particles = []; // Ensure array is initialized
         // Main star rays
         for (let i = 0; i < this.options.starPoints; i++) {
             const angle = (i / this.options.starPoints) * Math.PI * 2;
@@ -394,7 +360,7 @@ class ExplosionEffect {
         }
     }
     
-    renderStar(progress) {
+    render(progress) {
         // Draw center glow
         const centerGlow = Math.max(0, 1 - progress * 2);
         this.ctx.save();
@@ -431,8 +397,24 @@ class ExplosionEffect {
         }
     }
     
-    // Glow Effect Methods
-    renderGlow(progress) {
+    cleanup() {
+        super.cleanup();
+        this.particles = []; // Clear particles array to free memory
+    }
+}
+
+// Glow Pulse Effect
+class GlowPulse extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            pulseCount: 4,
+            color: '#ffff00',
+            glowIntensity: 3
+        };
+        super(canvas, { ...defaults, ...options });
+    }
+    
+    render(progress) {
         const pulseFreq = 8;
         const pulse = Math.sin(progress * Math.PI * pulseFreq) * 0.5 + 0.5;
         const overallIntensity = Math.sin(progress * Math.PI);
@@ -478,9 +460,28 @@ class ExplosionEffect {
         this.ctx.restore();
     }
     
-    // Fire Effect Methods
-    initializeFire() {
+    cleanup() {
+        super.cleanup();
+        // GlowPulse doesn't have particle arrays, just the basic cleanup
+    }
+}
+
+// Fire Explosion Effect
+class FireExplosion extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            color: '#ff4400',
+            glowIntensity: 2,
+            smokeParticles: 30
+        };
+        super(canvas, { ...defaults, ...options });
         this.fireParticles = [];
+        this.smokeParticles = [];
+        this.initializeParticles();
+    }
+    
+    initializeParticles() {
+        this.fireParticles = []; // Ensure arrays are initialized
         this.smokeParticles = [];
         
         // Fire particles
@@ -521,7 +522,7 @@ class ExplosionEffect {
         }
     }
     
-    renderFire(progress) {
+    render(progress) {
         // Add fade-in effect for the first 20% of the animation
         const fadeInProgress = Math.min(progress / 0.2, 1);
         const fadeInFactor = fadeInProgress;
@@ -540,7 +541,7 @@ class ExplosionEffect {
                 // Apply both fade-in and fade-out
                 const alpha = Math.max(0, (1 - progress) * fadeInFactor);
                 
-                if (alpha > 0.01) {
+                if (alpha > 0) {
                     this.ctx.save();
                     this.ctx.globalAlpha = alpha;
                     this.ctx.shadowColor = particle.color;
@@ -581,9 +582,28 @@ class ExplosionEffect {
         }
     }
     
-    // Shower Effect Methods
-    initializeShower() {
+    cleanup() {
+        super.cleanup();
+        this.fireParticles = []; // Clear particle arrays to free memory
+        this.smokeParticles = [];
+    }
+}
+
+// Particle Shower Effect
+class ParticleShower extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            color: '#ffffff',
+            glowIntensity: 1,
+            showerHeight: 200
+        };
+        super(canvas, { ...defaults, ...options });
         this.particles = [];
+        this.initializeParticles();
+    }
+    
+    initializeParticles() {
+        this.particles = []; // Ensure array is initialized
         for (let i = 0; i < this.options.particleCount * 2; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 30 + Math.random() * 100;
@@ -605,7 +625,7 @@ class ExplosionEffect {
         }
     }
     
-    renderShower(progress) {
+    render(progress) {
         if (this.particles && this.particles.length > 0) {
             this.particles.forEach(particle => {
                 // Store trail position
@@ -628,7 +648,7 @@ class ExplosionEffect {
                 // Draw trail
                 particle.trail.forEach((pos, index) => {
                     const trailAlpha = (1 - index / particle.trail.length) * Math.max(0, 1 - progress);
-                    if (trailAlpha > 0.01) {
+                    if (trailAlpha > 0) {
                         this.ctx.save();
                         this.ctx.globalAlpha = trailAlpha;
                         this.ctx.fillStyle = particle.color;
@@ -642,22 +662,39 @@ class ExplosionEffect {
                 
                 // Draw particle
                 const alpha = Math.max(0, 1 - progress);
-                if (alpha > 0.01) {
-                    this.ctx.save();
-                    this.ctx.globalAlpha = alpha;
-                    this.ctx.shadowColor = particle.color;
-                    this.ctx.shadowBlur = 8 * this.options.glowIntensity * alpha;
-                    this.ctx.fillStyle = particle.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    this.ctx.restore();
-                }
+                this.ctx.save();
+                this.ctx.globalAlpha = alpha;
+                this.ctx.shadowColor = particle.color;
+                this.ctx.shadowBlur = 8 * this.options.glowIntensity * alpha;
+                this.ctx.fillStyle = particle.color;
+                this.ctx.beginPath();
+                this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
             });
         }
     }
     
-    // Confetti Effect Methods
+    cleanup() {
+        super.cleanup();
+        this.particles = []; // Clear particle array to free memory
+    }
+}
+
+// Confetti Effect
+class ConfettiExplosion extends ExplosionEffect {
+    constructor(canvas, options = {}) {
+        const defaults = {
+            color: '#ff69b4',
+            particleCount: 60, // Reduced from 80 for better performance
+            glowIntensity: 0.5,
+            duration: 3000
+        };
+        super(canvas, { ...defaults, ...options });
+        this.confettiPieces = [];
+        this.initializeConfetti();
+    }
+    
     initializeConfetti() {
         this.confettiPieces = [];
         
@@ -702,7 +739,7 @@ class ExplosionEffect {
         }
     }
     
-    renderConfetti(progress) {
+    render(progress) {
         if (this.confettiPieces && this.confettiPieces.length > 0) {
             // Pre-calculate time-based values outside the loop for better performance
             const time = Date.now() * 0.001;
@@ -765,9 +802,23 @@ class ExplosionEffect {
             });
         }
     }
+    
+    cleanup() {
+        super.cleanup();
+        this.confettiPieces = []; // Clear particle array to free memory
+    }
 }
 
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ExplosionEffect };
+    module.exports = {
+        ExplosionEffect,
+        LightningBurst,
+        RingExplosion,
+        StarBurst,
+        GlowPulse,
+        FireExplosion,
+        ParticleShower,
+        ConfettiExplosion
+    };
 }

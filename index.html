@@ -403,30 +403,21 @@
                     document.getElementById('yValue').textContent = Math.round(y);
                 }
                 
-                // Create the appropriate effect
-                switch (this.currentEffect) {
-                    case 'LightningBurst':
-                        this.currentExplosion = new LightningBurst(this.canvas, options);
-                        break;
-                    case 'RingExplosion':
-                        this.currentExplosion = new RingExplosion(this.canvas, options);
-                        break;
-                    case 'StarBurst':
-                        this.currentExplosion = new StarBurst(this.canvas, options);
-                        break;
-                    case 'GlowPulse':
-                        this.currentExplosion = new GlowPulse(this.canvas, options);
-                        break;
-                    case 'FireExplosion':
-                        this.currentExplosion = new FireExplosion(this.canvas, options);
-                        break;
-                    case 'ParticleShower':
-                        this.currentExplosion = new ParticleShower(this.canvas, options);
-                        break;
-                    case 'ConfettiExplosion':
-                        this.currentExplosion = new ConfettiExplosion(this.canvas, options);
-                        break;
-                }
+                // Set the effect type based on current selection
+                const effectTypeMap = {
+                    'LightningBurst': 'lightning',
+                    'RingExplosion': 'ring',
+                    'StarBurst': 'star',
+                    'GlowPulse': 'glow',
+                    'FireExplosion': 'fire',
+                    'ParticleShower': 'shower',
+                    'ConfettiExplosion': 'confetti'
+                };
+                
+                options.type = effectTypeMap[this.currentEffect] || 'lightning';
+                
+                // Create the explosion effect with the specified type
+                this.currentExplosion = new ExplosionEffect(this.canvas, options);
                 
                 this.explosionCount++;
                 document.getElementById('explosionCount').textContent = this.explosionCount;

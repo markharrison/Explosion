@@ -2,18 +2,17 @@
 
 ## Overview
 
-The ExplosionEffect library is a comprehensive JavaScript library for creating animated explosion effects using HTML5 Canvas. It provides an extensible framework for creating various types of explosion animations with particle systems, glow effects, and configurable parameters.
+The ExplosionEffect library is a comprehensive JavaScript library for creating animated explosion effects using HTML5 Canvas. It provides a unified API for seven distinct explosion effect types through a single class, with particle systems, glow effects, automatic memory management, and configurable parameters.
 
 ## Table of Contents
 
 1. [Quick Start](#quick-start)
-2. [Core Architecture](#core-architecture)
+2. [New Unified Architecture](#unified-architecture)
 3. [Built-in Effects](#built-in-effects)
 4. [Configuration Options](#configuration-options)
-5. [Creating Custom Effects](#creating-custom-effects)
-6. [API Reference](#api-reference)
-7. [Examples](#examples)
-8. [Performance Considerations](#performance-considerations)
+5. [API Reference](#api-reference)
+6. [Examples](#examples)
+7. [Performance Considerations](#performance-considerations)
 
 ## Quick Start
 
@@ -32,7 +31,8 @@ The ExplosionEffect library is a comprehensive JavaScript library for creating a
         const canvas = document.getElementById('myCanvas');
         
         // Create a lightning burst effect
-        const explosion = new LightningBurst(canvas, {
+        const explosion = new ExplosionEffect(canvas, {
+            type: 'lightning',
             x: 400,
             y: 300,
             color: '#9966ff',
@@ -48,783 +48,331 @@ The ExplosionEffect library is a comprehensive JavaScript library for creating a
 ```javascript
 // Create different effects at different positions
 const effects = [
-    new LightningBurst(canvas, { x: 200, y: 200, color: '#9966ff' }),
-    new RingExplosion(canvas, { x: 400, y: 200, color: '#00ff88' }),
-    new FireExplosion(canvas, { x: 600, y: 200, color: '#ff4400' })
+    new ExplosionEffect(canvas, { type: 'fire', x: 200, y: 200 }),
+    new ExplosionEffect(canvas, { type: 'confetti', x: 400, y: 200 }),
+    new ExplosionEffect(canvas, { type: 'glow', x: 600, y: 200 })
 ];
 ```
 
-## Core Architecture
+## Unified Architecture
 
-### Base Class: ExplosionEffect
+The library now uses a **single `ExplosionEffect` class** with configurable effect types, providing a cleaner and more maintainable API structure:
 
-The `ExplosionEffect` class serves as the foundation for all explosion effects. It provides:
+### Key Improvements
 
-- Canvas rendering context management
-- Animation loop control
-- Particle system utilities
-- Common configuration handling
+- **Single Class Design**: All effect types are now handled by one `ExplosionEffect` class
+- **Type-Based Configuration**: Effects are selected using the `type` option
+- **Consistent API**: Same constructor and methods for all effect types
+- **Automatic Memory Management**: All particle arrays are automatically cleaned up
+- **Complete Fade-out System**: Ensures all particles fade to alpha = 0 within duration
 
-### Key Components
+### Effect Types
 
-1. **Animation System**: Frame-based animation using `requestAnimationFrame`
-2. **Particle System**: Utilities for creating and managing particles
-3. **Rendering Pipeline**: Methods for drawing particles with glow effects
-4. **Configuration Management**: Flexible parameter system
-
-### Class Hierarchy
-
-```
-ExplosionEffect (Base Class)
-├── LightningBurst
-├── RingExplosion
-├── StarBurst
-├── GlowPulse
-├── FireExplosion
-├── ParticleShower
-└── ConfettiExplosion
-```
+| Type | Description |
+|------|-------------|
+| `'lightning'` | Electric lightning bolts radiating from center |
+| `'ring'` | Concentric rings of particles expanding outward |
+| `'star'` | Multi-ray star explosions with delayed particle release |
+| `'glow'` | Pulsing energy waves with intense glow effects |
+| `'fire'` | Realistic fire and smoke with smooth fade-in |
+| `'shower'` | Cascading particles with trails and bounce physics |
+| `'confetti'` | Celebration effect with mixed shapes and realistic physics |
 
 ## Built-in Effects
+### 1. Lightning Burst (`type: 'lightning'`)
 
-### 1. LightningBurst
+Electric lightning bolts radiating from a central point with jagged segments and intense glow.
 
-Creates electric lightning bolt effects radiating from a central point.
+```javascript
+const lightning = new ExplosionEffect(canvas, {
+    type: 'lightning',
+    x: 400,
+    y: 300,
+    color: '#9966ff',
+    lightningCount: 12,
+    glowIntensity: 2
+});
+```
 
-**Unique Properties:**
+**Specific Options:**
 - `lightningCount`: Number of lightning bolts (default: 12)
-- Creates jagged, electric-looking rays
-- Bright central glow with radiating bolts
 
-**Best Use Cases:** 
-- Electric explosions
-- Energy discharge effects
-- Magical spell effects
+### 2. Ring Explosion (`type: 'ring'`)
 
-### 2. RingExplosion
+Concentric rings of particles expanding outward with a central ring effect.
 
-Generates concentric rings of particles expanding outward.
+```javascript
+const ring = new ExplosionEffect(canvas, {
+    type: 'ring',
+    x: 400,
+    y: 300,
+    color: '#00ff88',
+    ringCount: 3,
+    glowIntensity: 1.5
+});
+```
 
-**Unique Properties:**
+**Specific Options:**
 - `ringCount`: Number of particle rings (default: 3)
-- Creates circular wave patterns
-- Progressive ring activation
 
-**Best Use Cases:**
-- Shockwave effects
-- Impact explosions
-- Energy pulses
+### 3. Star Burst (`type: 'star'`)
 
-### 3. StarBurst
+Multi-ray star explosions with delayed particle release for dramatic effect.
 
-Creates star-like explosion patterns with multiple rays.
+```javascript
+const star = new ExplosionEffect(canvas, {
+    type: 'star',
+    x: 400,
+    y: 300,
+    color: '#00aaff',
+    starPoints: 8,
+    glowIntensity: 1.8
+});
+```
 
-**Unique Properties:**
-- `starPoints`: Number of main rays (default: 8)
-- Delayed particle release for dramatic effect
-- Secondary particle scatter
+**Specific Options:**
+- `starPoints`: Number of star points/rays (default: 8)
 
-**Best Use Cases:**
-- Fireworks effects
-- Celestial explosions
-- Impact bursts
+### 4. Glow Pulse (`type: 'glow'`)
 
-### 4. GlowPulse
+Pulsing energy waves with intense glow and multiple concentric rings.
 
-Produces pulsing glow effects with multiple wave rings.
+```javascript
+const glow = new ExplosionEffect(canvas, {
+    type: 'glow',
+    x: 400,
+    y: 300,
+    color: '#ffff00',
+    pulseCount: 4,
+    glowIntensity: 3
+});
+```
 
-**Unique Properties:**
-- `pulseCount`: Number of pulse waves (default: 4)
-- Continuous pulsing animation
-- Intense glow effects
+**Specific Options:**
+- `pulseCount`: Number of pulsing rings (default: 4)
 
-**Best Use Cases:**
-- Energy charging effects
-- Beacon/signal effects
-- Mystical auras
+### 5. Fire Explosion (`type: 'fire'`)
 
-### 5. FireExplosion
+Realistic fire and smoke particles with smooth fade-in and enhanced visual clarity.
 
-Simulates realistic fire and smoke explosion effects.
+```javascript
+const fire = new ExplosionEffect(canvas, {
+    type: 'fire',
+    x: 400,
+    y: 300,
+    color: '#ff4400',
+    smokeParticles: 30,
+    glowIntensity: 2
+});
+```
 
-**Unique Properties:**
+**Specific Options:**
 - `smokeParticles`: Number of smoke particles (default: 30)
-- Color transition from bright to dark
-- Gravity and buoyancy effects
-- Realistic fire particle behavior
 
-**Best Use Cases:**
-- Realistic explosions
-- Fire effects
-- Combat/destruction scenes
+### 6. Particle Shower (`type: 'shower'`)
 
-### 6. ParticleShower
+Cascading particles with trails, bounce physics, and random colors.
 
-Creates cascading particle effects with trails and physics.
+```javascript
+const shower = new ExplosionEffect(canvas, {
+    type: 'shower',
+    x: 400,
+    y: 300,
+    color: '#ffffff',
+    showerHeight: 200,
+    glowIntensity: 1
+});
+```
 
-**Unique Properties:**
-- `showerHeight`: Maximum particle height (default: 200)
-- Particle trails and physics simulation
-- Bounce and gravity effects
-- Colorful particle variety
+**Specific Options:**
+- `showerHeight`: Height effect parameter (default: 200)
 
-**Best Use Cases:**
-- Celebratory effects
-- Particle fountains
-- Confetti-like animations
+### 7. Confetti Explosion (`type: 'confetti'`)
 
-### 7. ConfettiExplosion
+Enhanced celebration effect with mixed shapes, realistic physics, and optimized performance.
 
-Creates realistic confetti effects with colorful paper pieces falling through the air.
+```javascript
+const confetti = new ExplosionEffect(canvas, {
+    type: 'confetti',
+    x: 400,
+    y: 300,
+    color: '#ff69b4',
+    particleCount: 60,
+    duration: 3000,
+    glowIntensity: 0.5
+});
+```
 
-**Unique Properties:**
-- Rectangular confetti pieces instead of circular particles
-- Realistic paper physics with rotation and flutter
-- Bright celebratory colors (pink, blue, gold, green, etc.)
-- Air resistance and gravity simulation
-- Horizontal sway motion for realistic flutter
-
-**Best Use Cases:**
-- Celebration scenes
-- Party effects
-- Achievement notifications
-- Festive animations
+**Features:**
+- Mixed shapes: 70% rectangles, 30% diamond-shaped pieces
+- Vibrant celebration colors (10 different colors)
+- Realistic physics with air resistance and flutter effects
 
 ## Configuration Options
 
-### Global Options (Available for all effects)
+### Universal Options
+
+These options are available for all effect types:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `type` | string | `'lightning'` | Effect type to render |
 | `x` | number | canvas.width/2 | X position of explosion center |
 | `y` | number | canvas.height/2 | Y position of explosion center |
 | `particleCount` | number | 50 | Number of particles to generate |
 | `duration` | number | 2000 | Animation duration in milliseconds |
-| `size` | number | 1 | Size multiplier for the effect |
-| `color` | string | '#ffffff' | Primary color of the effect |
+| `size` | number | 1 | Size multiplier for all elements |
+| `color` | string | `'#ffffff'` | Primary color (hex format) |
 | `glowIntensity` | number | 1 | Intensity of glow effects |
-| `autoStart` | boolean | true | Whether to start animation immediately |
+| `autoStart` | boolean | true | Whether to start animation automatically |
 
 ### Effect-Specific Options
 
-#### LightningBurst
-```javascript
-{
-    lightningCount: 12,     // Number of lightning bolts
-    color: '#9966ff',       // Lightning color
-    glowIntensity: 2        // Extra glow for electric effect
-}
-```
-
-#### RingExplosion
-```javascript
-{
-    ringCount: 3,           // Number of particle rings
-    color: '#00ff88',       // Ring color
-    glowIntensity: 1.5      // Ring glow intensity
-}
-```
-
-#### StarBurst
-```javascript
-{
-    starPoints: 8,          // Number of main rays
-    color: '#00aaff',       // Star color
-    glowIntensity: 1.8      // Star glow intensity
-}
-```
-
-#### GlowPulse
-```javascript
-{
-    pulseCount: 4,          // Number of pulse waves
-    color: '#ffff00',       // Pulse color
-    glowIntensity: 3        // Maximum glow intensity
-}
-```
-
-#### FireExplosion
-```javascript
-{
-    color: '#ff4400',       // Base fire color
-    glowIntensity: 2,       // Fire glow intensity
-    smokeParticles: 30      // Number of smoke particles
-}
-```
-
-**Enhanced Features:**
-- **Smooth Fade-in**: 20% fade-in period reduces initial visual confusion
-- **Realistic Fire Particles**: Individual fire particles with color transitions from bright to dark
-- **Smoke Effects**: Delayed smoke particles with growth and transparency effects
-- **Clean Visual**: Removed distracting large circle for more authentic fire appearance
-
-#### ParticleShower
-```javascript
-{
-    color: '#ffffff',       // Base particle color
-    glowIntensity: 1,       // Particle glow intensity
-    showerHeight: 200       // Maximum particle travel height
-}
-```
-
-#### ConfettiExplosion
-```javascript
-{
-    color: '#ff69b4',       // Primary confetti color (used as base for variety)
-    particleCount: 60,      // Number of confetti pieces (optimized for performance)
-    glowIntensity: 0.5,     // Subtle glow effect
-    duration: 3000          // Longer duration for realistic falling
-}
-```
-
-**Enhanced Features:**
-- **Mixed Shapes**: 70% rectangles, 30% diamond-shaped pieces for visual variety
-- **Realistic Physics**: Enhanced air resistance, gravity, and flutter effects
-- **Dynamic Motion**: Twirling and horizontal sway that mimics real confetti
-- **Vibrant Colors**: 10 celebration colors including hot pink, gold, lime green, and sky blue
-- **Performance Optimized**: Reduced particle count and optimized rendering for smooth 60 FPS
-- **Complete Fade-out**: Proper alpha blending ensures no particles remain frozen on screen
-
-## Creating Custom Effects
-
-### Step 1: Extend the Base Class
-
-```javascript
-class CustomExplosion extends ExplosionEffect {
-    constructor(canvas, options = {}) {
-        // Define default options specific to your effect
-        const defaults = {
-            customProperty: 'defaultValue',
-            specialParameter: 100
-        };
-        
-        // Merge with base defaults
-        super(canvas, { ...defaults, ...options });
-        
-        // Initialize effect-specific properties
-        this.initializeCustomEffect();
-    }
-    
-    initializeCustomEffect() {
-        // Set up particles, paths, or other effect elements
-        this.particles = [];
-        // ... initialization code
-    }
-    
-    render(progress) {
-        // progress: 0 to 1 representing animation completion
-        
-        // Your custom rendering logic here
-        // Use this.ctx for canvas drawing
-        // Use utility methods like drawParticle(), createParticle()
-        
-        // Example:
-        this.particles.forEach(particle => {
-            // Update particle position
-            particle.x += particle.vx * progress;
-            particle.y += particle.vy * progress;
-            
-            // Draw particle with glow
-            this.drawParticle(particle, this.options.glowIntensity);
-        });
-    }
-}
-```
-
-### Step 2: Utilize Base Class Utilities
-
-The base class provides several utility methods:
-
-```javascript
-// Create a particle object
-const particle = this.createParticle(x, y, velocityX, velocityY, life, size, color);
-
-// Update particle (returns true if particle is still alive)
-const isAlive = this.updateParticle(particle, deltaTime);
-
-// Draw particle with glow effects
-this.drawParticle(particle, glowIntensity);
-
-// Convert HSL to RGB for color effects
-const rgbColor = this.hslToRgb(hue, saturation, lightness);
-```
-
-### Step 3: Advanced Techniques
-
-#### Creating Complex Particle Behaviors
-
-```javascript
-class HelixExplosion extends ExplosionEffect {
-    initializeEffect() {
-        this.particles = [];
-        
-        for (let i = 0; i < this.options.particleCount; i++) {
-            const angle = (i / this.options.particleCount) * Math.PI * 4; // Multiple rotations
-            const particle = this.createParticle(
-                this.options.x,
-                this.options.y,
-                0, 0, // Will be calculated in render
-                2, 3,
-                this.hslToRgb(angle * 57.3, 0.8, 0.6) // Color based on angle
-            );
-            particle.angle = angle;
-            particle.radius = 0;
-            this.particles.push(particle);
-        }
-    }
-    
-    render(progress) {
-        this.particles.forEach(particle => {
-            // Spiral outward motion
-            particle.radius = progress * 150;
-            particle.x = this.options.x + Math.cos(particle.angle) * particle.radius;
-            particle.y = this.options.y + Math.sin(particle.angle) * particle.radius;
-            
-            // Vertical helix motion
-            const helixOffset = Math.sin(progress * Math.PI * 6 + particle.angle) * 20;
-            particle.y += helixOffset;
-            
-            this.drawParticle(particle, this.options.glowIntensity);
-        });
-    }
-}
-```
-
-#### Adding Physics Simulation
-
-```javascript
-class PhysicsExplosion extends ExplosionEffect {
-    initializeEffect() {
-        this.particles = [];
-        
-        for (let i = 0; i < this.options.particleCount; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 50 + Math.random() * 100;
-            const particle = this.createParticle(
-                this.options.x,
-                this.options.y,
-                Math.cos(angle) * speed,
-                Math.sin(angle) * speed,
-                2 + Math.random(),
-                2 + Math.random() * 3,
-                this.options.color
-            );
-            particle.gravity = 98; // Pixels per second squared
-            particle.friction = 0.98;
-            particle.bounce = 0.7;
-            this.particles.push(particle);
-        }
-    }
-    
-    render(progress) {
-        const deltaTime = 16 / 1000; // Assume 60 FPS
-        
-        this.particles.forEach(particle => {
-            // Apply physics
-            particle.vy += particle.gravity * deltaTime;
-            particle.vx *= particle.friction;
-            particle.vy *= particle.friction;
-            
-            // Update position
-            particle.x += particle.vx * deltaTime;
-            particle.y += particle.vy * deltaTime;
-            
-            // Bounce off canvas edges
-            if (particle.y >= this.canvas.height - particle.size) {
-                particle.y = this.canvas.height - particle.size;
-                particle.vy *= -particle.bounce;
-            }
-            
-            if (particle.x <= particle.size || particle.x >= this.canvas.width - particle.size) {
-                particle.vx *= -particle.bounce;
-            }
-            
-            this.drawParticle(particle, this.options.glowIntensity);
-        });
-    }
-}
-```
+| Effect Type | Specific Options |
+|-------------|------------------|
+| `lightning` | `lightningCount: 12` - Number of lightning bolts |
+| `ring` | `ringCount: 3` - Number of particle rings |
+| `star` | `starPoints: 8` - Number of star points/rays |
+| `glow` | `pulseCount: 4` - Number of pulsing rings |
+| `fire` | `smokeParticles: 30` - Number of smoke particles |
+| `shower` | `showerHeight: 200` - Height effect parameter |
+| `confetti` | None (uses standard particle options) |
 
 ## API Reference
 
-### ExplosionEffect (Base Class)
+### Constructor
 
-#### Constructor
 ```javascript
 new ExplosionEffect(canvas, options)
 ```
 
-#### Methods
+**Parameters:**
+- `canvas` (HTMLCanvasElement): Target canvas element
+- `options` (Object): Configuration options (see above)
 
-| Method | Description | Parameters | Returns |
-|--------|-------------|------------|---------|
-| `start()` | Start the animation | None | void |
-| `stop()` | Stop the animation and clean up | None | void |
-| `clear()` | Clear the canvas | None | void |
-| `cleanup()` | Clean up memory objects (called automatically) | None | void |
-| `render(progress)` | Render frame (override in subclasses) | progress: number (0-1) | void |
+### Methods
 
-#### Utility Methods
-
-| Method | Description | Parameters | Returns |
-|--------|-------------|------------|---------|
-| `createParticle(x, y, vx, vy, life, size, color)` | Create particle object | x,y: position; vx,vy: velocity; life: lifetime; size: radius; color: string | Particle object |
-| `updateParticle(particle, deltaTime)` | Update particle state | particle: object; deltaTime: number | boolean (alive) |
-| `drawParticle(particle, glowIntensity)` | Draw particle with glow | particle: object; glowIntensity: number | void |
-| `hslToRgb(h, s, l)` | Convert HSL to RGB | h: hue (0-360); s,l: saturation/lightness (0-1) | RGB string |
-
-### Effect Classes
-
-All effect classes extend `ExplosionEffect` and accept the same base options plus their specific options.
+#### `start()`
+Starts or restarts the animation.
 
 ```javascript
-// Lightning effect
-new LightningBurst(canvas, options)
+const explosion = new ExplosionEffect(canvas, { autoStart: false });
+explosion.start();
+```
 
-// Ring effect  
-new RingExplosion(canvas, options)
+#### `stop()`
+Stops the animation and cleans up memory.
 
-// Star effect
-new StarBurst(canvas, options)
+```javascript
+explosion.stop();
+```
 
-// Glow effect
-new GlowPulse(canvas, options)
+#### `clear()`
+Clears the canvas without stopping the animation.
 
-// Fire effect
-new FireExplosion(canvas, options)
+```javascript
+explosion.clear();
+```
 
-// Particle shower effect
-new ParticleShower(canvas, options)
+#### `cleanup()`
+Manually clean up particle arrays and memory objects. Called automatically when animation ends.
 
-// Confetti effect
-new ConfettiExplosion(canvas, options)
+```javascript
+explosion.cleanup();
 ```
 
 ## Examples
 
-### Basic Effect Gallery
+### Basic Effect Creation
 
 ```javascript
-const canvas = document.getElementById('canvas');
-const effects = [
-    { type: LightningBurst, x: 150, y: 150, color: '#9966ff' },
-    { type: RingExplosion, x: 350, y: 150, color: '#00ff88' },
-    { type: StarBurst, x: 550, y: 150, color: '#00aaff' },
-    { type: GlowPulse, x: 150, y: 350, color: '#ffff00' },
-    { type: FireExplosion, x: 350, y: 350, color: '#ff4400' },
-    { type: ParticleShower, x: 550, y: 350, color: '#ffffff' },
-    { type: ConfettiExplosion, x: 750, y: 250, color: '#ff69b4' }
-];
-
-// Trigger all effects with delays
-effects.forEach((config, index) => {
-    setTimeout(() => {
-        new config.type(canvas, {
-            x: config.x,
-            y: config.y,
-            color: config.color,
-            size: 0.8
-        });
-    }, index * 500);
+// Simple lightning effect
+const lightning = new ExplosionEffect(canvas, {
+    type: 'lightning',
+    x: 400,
+    y: 300
 });
 ```
 
-### Interactive Explosion on Click
+### Advanced Configuration
 
 ```javascript
-const canvas = document.getElementById('canvas');
+// Customized fire explosion
+const fire = new ExplosionEffect(canvas, {
+    type: 'fire',
+    x: 400,
+    y: 300,
+    particleCount: 80,
+    duration: 3000,
+    size: 1.5,
+    color: '#ff6600',
+    glowIntensity: 2.5,
+    smokeParticles: 40
+});
+```
 
-canvas.addEventListener('click', (event) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    // Random effect type
-    const effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower, ConfettiExplosion];
-    const EffectClass = effects[Math.floor(Math.random() * effects.length)];
-    
-    // Random color
-    const colors = ['#9966ff', '#00ff88', '#00aaff', '#ffff00', '#ff4400', '#ffffff'];
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    
-    new EffectClass(canvas, {
-        x: x,
-        y: y,
-        color: color,
-        size: 0.5 + Math.random() * 1.5
+### Sequential Effects
+
+```javascript
+// Chain multiple effects
+function createSequentialExplosion() {
+    const lightning = new ExplosionEffect(canvas, {
+        type: 'lightning',
+        x: 400,
+        y: 300,
+        duration: 1000
     });
-});
+    
+    setTimeout(() => {
+        new ExplosionEffect(canvas, {
+            type: 'ring',
+            x: 400,
+            y: 300,
+            duration: 2000
+        });
+    }, 800);
+}
 ```
 
-### Synchronized Multi-Effect Sequence
+### Random Position Effects
 
 ```javascript
-class ExplosionSequence {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.effects = [];
-    }
+function randomExplosion() {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const types = ['lightning', 'ring', 'star', 'glow', 'fire', 'shower', 'confetti'];
+    const type = types[Math.floor(Math.random() * types.length)];
     
-    addEffect(EffectClass, delay, options) {
-        this.effects.push({ EffectClass, delay, options });
-        return this;
-    }
-    
-    play() {
-        this.effects.forEach(({ EffectClass, delay, options }) => {
-            setTimeout(() => {
-                new EffectClass(this.canvas, options);
-            }, delay);
-        });
-    }
+    new ExplosionEffect(canvas, { type, x, y });
 }
-
-// Create a complex sequence
-const sequence = new ExplosionSequence(canvas)
-    .addEffect(GlowPulse, 0, { x: 400, y: 300, color: '#ffff00', duration: 3000 })
-    .addEffect(RingExplosion, 500, { x: 400, y: 300, color: '#00ff88', size: 1.5 })
-    .addEffect(LightningBurst, 1000, { x: 400, y: 300, color: '#9966ff', size: 2 })
-    .addEffect(FireExplosion, 1500, { x: 400, y: 300, color: '#ff4400', size: 1.2 })
-    .addEffect(ParticleShower, 2000, { x: 400, y: 300, color: '#ffffff', size: 0.8 })
-    .addEffect(ConfettiExplosion, 2500, { x: 400, y: 300, color: '#ff69b4', size: 1.0 });
-
-sequence.play();
-```
-
-### Continuous Random Explosions
-
-```javascript
-class RandomExplosionGenerator {
-    constructor(canvas, interval = 2000) {
-        this.canvas = canvas;
-        this.interval = interval;
-        this.isRunning = false;
-        this.timeoutId = null;
-        
-        this.effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower, ConfettiExplosion];
-        this.colors = ['#9966ff', '#00ff88', '#00aaff', '#ffff00', '#ff4400', '#ffffff', '#ff00ff', '#00ffff'];
-    }
-    
-    start() {
-        if (this.isRunning) return;
-        this.isRunning = true;
-        this.generateNext();
-    }
-    
-    stop() {
-        this.isRunning = false;
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-        }
-    }
-    
-    generateNext() {
-        if (!this.isRunning) return;
-        
-        // Random position
-        const x = 50 + Math.random() * (this.canvas.width - 100);
-        const y = 50 + Math.random() * (this.canvas.height - 100);
-        
-        // Random effect and color
-        const EffectClass = this.effects[Math.floor(Math.random() * this.effects.length)];
-        const color = this.colors[Math.floor(Math.random() * this.colors.length)];
-        
-        // Create explosion
-        new EffectClass(this.canvas, {
-            x: x,
-            y: y,
-            color: color,
-            size: 0.5 + Math.random() * 1.5,
-            glowIntensity: 1 + Math.random() * 2
-        });
-        
-        // Schedule next explosion
-        this.timeoutId = setTimeout(() => {
-            this.generateNext();
-        }, this.interval * (0.5 + Math.random()));
-    }
-}
-
-// Usage
-const generator = new RandomExplosionGenerator(canvas, 1500);
-generator.start();
-
-// Stop after 30 seconds
-setTimeout(() => generator.stop(), 30000);
 ```
 
 ## Performance Considerations
 
-### Recent Performance Improvements
+### Memory Management
 
-1. **Automatic Memory Cleanup**
-   - All effects now automatically clean up particle arrays when animation completes
-   - Proper `cleanup()` method called on animation end and when `stop()` is invoked
-   - Prevents memory leaks in long-running applications
+- **Automatic Cleanup**: All particle arrays are automatically cleaned up when animations complete
+- **Manual Cleanup**: Call `stop()` or `cleanup()` to manually free memory
+- **Effect Lifecycle**: Each effect properly manages its memory from creation to destruction
 
-2. **Optimized Rendering**
-   ```javascript
-   // Confetti effect improvements:
-   // - Pre-calculated time values outside particle loops
-   // - Alpha threshold checks (only render if alpha > 0.01)
-   // - Reduced glow calculations for low-alpha particles
-   // - Optimized particle count (60 vs 80) for better performance
-   ```
+### Performance Optimizations
 
-3. **Enhanced Fade-out System**
-   ```javascript
-   // All effects now properly fade to alpha = 0 when progress = 1
-   const alpha = Math.max(0, 1 - progress); // Ensures complete fade-out
-   ```
+- **Alpha Threshold**: Particles with alpha < 0.01 are not rendered
+- **Pre-calculated Values**: Time-based calculations are optimized for better frame rates
+- **Reduced Computational Load**: Minimized trigonometric calculations per frame
+- **Consistent 60 FPS**: All effects maintain smooth performance
 
-4. **Improved FPS Monitoring**
-   ```javascript
-   // Accurate frame rate measurement using requestAnimationFrame
-   // More reliable performance metrics in test application
-   ```
+### Best Practices
 
-### Optimization Tips
-
-1. **Particle Count Management**
-   ```javascript
-   // Adjust particle count based on device capabilities
-   const particleCount = window.devicePixelRatio > 1 ? 30 : 50;
-   ```
-
-2. **Canvas Size Optimization**
-   ```javascript
-   // Use appropriate canvas size for device
-   const maxSize = Math.min(window.innerWidth, window.innerHeight, 800);
-   canvas.width = maxSize;
-   canvas.height = maxSize * 0.75;
-   ```
-
-3. **Effect Cleanup** *(Now Automatic)*
-   ```javascript
-   // Effects automatically clean up when animation completes
-   const explosion = new LightningBurst(canvas, options);
-   // Cleanup happens automatically after options.duration
-   
-   // Manual cleanup is still available:
-   explosion.stop(); // Immediately stops and cleans up
-   ```
-
-4. **Memory Management**
-   ```javascript
-   // Clear canvas regularly in continuous applications
-   function clearOldEffects() {
-       ctx.clearRect(0, 0, canvas.width, canvas.height);
-   }
-   
-   setInterval(clearOldEffects, 5000);
-   ```
-
-### Performance Monitoring
-
-```javascript
-class PerformanceMonitor {
-    constructor() {
-        this.frameCount = 0;
-        this.lastTime = performance.now();
-        this.fps = 0;
-    }
-    
-    update() {
-        this.frameCount++;
-        const now = performance.now();
-        
-        if (now - this.lastTime >= 1000) {
-            this.fps = Math.round((this.frameCount * 1000) / (now - this.lastTime));
-            this.frameCount = 0;
-            this.lastTime = now;
-            
-            console.log(`FPS: ${this.fps}`);
-            
-            // Adjust quality based on performance
-            if (this.fps < 30) {
-                console.warn('Low FPS detected - consider reducing particle count');
-            }
-        }
-    }
-}
-
-const monitor = new PerformanceMonitor();
-function animationLoop() {
-    monitor.update();
-    // ... other animation code
-    requestAnimationFrame(animationLoop);
-}
-```
+1. **Limit Concurrent Effects**: Avoid too many simultaneous explosions
+2. **Use Appropriate Particle Counts**: Balance visual quality with performance
+3. **Optimize Duration**: Shorter durations reduce computational load
+4. **Monitor Frame Rate**: Use the test application's FPS counter to monitor performance
+5. **Clean Up**: Always clean up effects when changing scenes or pages
 
 ### Browser Compatibility
 
-- **Modern Browsers**: Full support for all features
-- **Mobile Devices**: Reduce particle counts for better performance
-- **Older Browsers**: Basic functionality with reduced glow effects
-
-### Recommended Settings by Device
-
-```javascript
-const getOptimalSettings = () => {
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isLowEnd = navigator.hardwareConcurrency < 4;
-    
-    if (isMobile || isLowEnd) {
-        return {
-            particleCount: 25,
-            glowIntensity: 0.5,
-            duration: 1500
-        };
-    } else {
-        return {
-            particleCount: 75,
-            glowIntensity: 2,
-            duration: 2500
-        };
-    }
-};
-
-// Use optimal settings
-const settings = getOptimalSettings();
-const explosion = new LightningBurst(canvas, settings);
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Canvas Not Found Error**
-   ```javascript
-   // Always check if canvas exists
-   const canvas = document.getElementById('myCanvas');
-   if (!canvas) {
-       console.error('Canvas element not found');
-       return;
-   }
-   ```
-
-2. **Effects Not Visible**
-   ```javascript
-   // Check canvas size and position
-   console.log(`Canvas size: ${canvas.width}x${canvas.height}`);
-   console.log(`Effect position: ${options.x}, ${options.y}`);
-   ```
-
-3. **Poor Performance**
-   ```javascript
-   // Reduce complexity
-   const lowPerformanceOptions = {
-       particleCount: 20,
-       glowIntensity: 0.5,
-       duration: 1000
-   };
-   ```
-
-4. **Color Not Showing**
-   ```javascript
-   // Ensure valid color format
-   const validColor = '#ff0000'; // Correct
-   const invalidColor = 'red';   // May not work in all contexts
-   ```
-
-This documentation provides comprehensive guidance for using and extending the Explosion Effects Library. For additional support or feature requests, please refer to the project repository.
+- Modern browsers with HTML5 Canvas support
+- No external dependencies required
+- Tested on Chrome, Firefox, Safari, and Edge
+- Mobile browser support with touch events
