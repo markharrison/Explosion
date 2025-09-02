@@ -57,6 +57,10 @@ const EXPLOSION_CONSTANTS = {
     FIRE_SATURATION: 0.9,
     FIRE_LIGHTNESS: 0.6,
     SMOKE_LIGHTNESS: 0.3,
+    
+    // Rendering optimizations
+    CANVAS_BOUNDARY_OFFSET: 10,
+    PULSE_FREQUENCY: 8,
     CONFETTI_SHAPES: {
         RECTANGLE_RATIO: 0.7,
         DIAMOND_RATIO: 0.3
@@ -135,6 +139,7 @@ class ExplosionEffect {
     /**
      * Initialize effect based on the selected type
      * Routes to appropriate initialization method
+     * @private
      */
     initializeEffect() {
         // Clear all arrays
@@ -176,6 +181,8 @@ class ExplosionEffect {
     
     /**
      * Start the explosion animation
+     * @public
+     * @returns {void}
      */
     start() {
         if (!this.isRunning) {
@@ -187,6 +194,8 @@ class ExplosionEffect {
     
     /**
      * Stop the animation and clean up resources
+     * @public
+     * @returns {void}
      */
     stop() {
         this.isRunning = false;
@@ -199,6 +208,8 @@ class ExplosionEffect {
     
     /**
      * Clear the canvas safely with error handling
+     * @public
+     * @returns {void}
      */
     clear() {
         try {
@@ -210,6 +221,8 @@ class ExplosionEffect {
     
     /**
      * Animation loop with error handling
+     * @private
+     * @returns {void}
      */
     animate() {
         if (!this.isRunning) return;
@@ -236,6 +249,8 @@ class ExplosionEffect {
     
     /**
      * Clean up all particle arrays and animation resources
+     * @public
+     * @returns {void}
      */
     cleanup() {
         // Clean up all particle arrays and memory objects
@@ -251,6 +266,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Main render method - routes to appropriate effect renderer
+     * @private
+     * @param {number} progress - Animation progress from 0 to 1
+     * @returns {void}
+     */
     render(progress) {
         // Route to appropriate render method based on effect type
         switch (this.options.type) {
@@ -278,7 +299,18 @@ class ExplosionEffect {
         }
     }
     
-    // Utility methods for effects
+    /**
+     * Create a particle object with initial properties
+     * @private
+     * @param {number} x - X position
+     * @param {number} y - Y position  
+     * @param {number} vx - X velocity
+     * @param {number} vy - Y velocity
+     * @param {number} [life=1] - Particle lifetime
+     * @param {number} [size=1] - Particle size
+     * @param {string} [color='#ffffff'] - Particle color
+     * @returns {Object} Particle object
+     */
     createParticle(x, y, vx, vy, life = 1, size = 1, color = '#ffffff') {
         return {
             x, y, vx, vy, life, size, color,
@@ -287,6 +319,13 @@ class ExplosionEffect {
         };
     }
     
+    /**
+     * Update particle position and life
+     * @private
+     * @param {Object} particle - The particle to update
+     * @param {number} deltaTime - Time delta for animation
+     * @returns {boolean} True if particle is still alive
+     */
     updateParticle(particle, deltaTime) {
         particle.x += particle.vx * deltaTime;
         particle.y += particle.vy * deltaTime;
@@ -294,6 +333,13 @@ class ExplosionEffect {
         return particle.life > 0;
     }
     
+    /**
+     * Draw a particle to the canvas with glow effects
+     * @private
+     * @param {Object} particle - The particle to draw
+     * @param {number} [glowIntensity=1] - Glow effect intensity
+     * @returns {void}
+     */
     drawParticle(particle, glowIntensity = 1) {
         const alpha = Math.max(0, particle.life / particle.startLife);
         const size = particle.size * (0.5 + alpha * 0.5);
@@ -315,7 +361,14 @@ class ExplosionEffect {
         this.ctx.restore();
     }
     
-    // Convert HSL to RGB for color effects
+    /**
+     * Convert HSL color values to RGB string
+     * @private
+     * @param {number} h - Hue (0-360)
+     * @param {number} s - Saturation (0-1)
+     * @param {number} l - Lightness (0-1)
+     * @returns {string} RGB color string
+     */
     hslToRgb(h, s, l) {
         const c = (1 - Math.abs(2 * l - 1)) * s;
         const x = c * (1 - Math.abs((h / 60) % 2 - 1));
@@ -332,7 +385,11 @@ class ExplosionEffect {
         return `rgb(${Math.round((r + m) * 255)}, ${Math.round((g + m) * 255)}, ${Math.round((b + m) * 255)})`;
     }
     
-    // Lightning Effect Methods
+    /**
+     * Initialize lightning bolt particles and segments
+     * @private
+     * @returns {void}
+     */
     initializeLightning() {
         this.lightningBolts = [];
         for (let i = 0; i < this.options.lightningCount; i++) {
@@ -355,6 +412,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Render lightning effect with jagged bolts and central glow
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
+     */
     renderLightning(progress) {
         const centerGlow = 1 - progress;
         const lightningIntensity = Math.sin(progress * Math.PI) * 2;
@@ -398,7 +461,11 @@ class ExplosionEffect {
         }
     }
     
-    // Ring Effect Methods
+    /**
+     * Initialize ring explosion with concentric particle rings
+     * @private
+     * @returns {void}
+     */
     initializeRing() {
         this.particles = [];
         for (let ring = 0; ring < this.options.ringCount; ring++) {
@@ -421,6 +488,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Render ring explosion with expanding particles and central ring
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
+     */
     renderRing(progress) {
         // Update and draw particles
         if (this.particles && this.particles.length > 0) {
@@ -461,7 +534,11 @@ class ExplosionEffect {
         this.ctx.restore();
     }
     
-    // Star Effect Methods
+    /**
+     * Initialize star burst effect with radiating rays
+     * @private
+     * @returns {void}
+     */
     initializeStar() {
         this.particles = [];
         // Main star rays
@@ -503,6 +580,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Render star burst effect with central glow and radiating particles
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
+     */
     renderStar(progress) {
         // Draw center glow
         const centerGlow = Math.max(0, 1 - progress * 2);
@@ -543,12 +626,14 @@ class ExplosionEffect {
     }
     
     /**
-     * Glow Effect Rendering
-     * Creates pulsing rings with central core
+     * Render glow pulse effect with pulsing rings and central core
+     * Creates pulsing rings with central core that fade out properly
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
      */
     renderGlow(progress) {
-        const pulseFreq = 8;
-        const pulse = Math.sin(progress * Math.PI * pulseFreq) * 0.5 + 0.5;
+        const pulse = Math.sin(progress * Math.PI * EXPLOSION_CONSTANTS.PULSE_FREQUENCY) * 0.5 + 0.5;
         const overallIntensity = Math.sin(progress * Math.PI);
         
         // Multiple pulse rings
@@ -597,7 +682,11 @@ class ExplosionEffect {
         }
     }
     
-    // Fire Effect Methods
+    /**
+     * Initialize fire explosion with fire and smoke particles
+     * @private
+     * @returns {void}
+     */
     initializeFire() {
         this.fireParticles = [];
         this.smokeParticles = [];
@@ -640,6 +729,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Render fire explosion with realistic fire and smoke effects
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
+     */
     renderFire(progress) {
         // Add fade-in effect for the first portion of the animation
         const fadeInProgress = Math.min(progress / EXPLOSION_CONSTANTS.FADE_IN_DURATION, 1);
@@ -700,7 +795,11 @@ class ExplosionEffect {
         }
     }
     
-    // Shower Effect Methods
+    /**
+     * Initialize particle shower with trailing particles
+     * @private
+     * @returns {void}
+     */
     initializeShower() {
         this.particles = [];
         for (let i = 0; i < this.options.particleCount * 2; i++) {
@@ -724,6 +823,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Render particle shower with trails and bounce physics
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
+     */
     renderShower(progress) {
         if (this.particles && this.particles.length > 0) {
             this.particles.forEach(particle => {
@@ -738,10 +843,10 @@ class ExplosionEffect {
                 particle.y += particle.vy * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_SHOWER + particle.gravity * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_SHOWER;
                 
                 // Bounce off bottom
-                if (particle.y > this.canvas.height - 10) {
-                    particle.y = this.canvas.height - 10;
+                if (particle.y > this.canvas.height - EXPLOSION_CONSTANTS.CANVAS_BOUNDARY_OFFSET) {
+                    particle.y = this.canvas.height - EXPLOSION_CONSTANTS.CANVAS_BOUNDARY_OFFSET;
                     particle.vy *= -particle.bounce;
-                    particle.vx *= 0.9; // Friction
+                    particle.vx *= EXPLOSION_CONSTANTS.FRICTION; // Friction
                 }
                 
                 // Draw trail
@@ -776,7 +881,11 @@ class ExplosionEffect {
         }
     }
     
-    // Confetti Effect Methods
+    /**
+     * Initialize confetti explosion with mixed shapes and colors
+     * @private
+     * @returns {void}
+     */
     initializeConfetti() {
         this.confettiPieces = [];
         
@@ -821,6 +930,12 @@ class ExplosionEffect {
         }
     }
     
+    /**
+     * Render confetti explosion with realistic physics and mixed shapes
+     * @private
+     * @param {number} progress - Animation progress (0-1)
+     * @returns {void}
+     */
     renderConfetti(progress) {
         if (this.confettiPieces && this.confettiPieces.length > 0) {
             // Pre-calculate time-based values outside the loop for better performance
