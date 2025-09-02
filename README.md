@@ -4,7 +4,7 @@ A comprehensive JavaScript library for creating stunning animated explosion effe
 
 ## ✨ Features
 
-- **6 Built-in Effect Types**: Lightning bursts, ring explosions, star bursts, glow pulses, fire explosions, and particle showers
+- **7 Built-in Effect Types**: Lightning bursts, ring explosions, star bursts, glow pulses, fire explosions, particle showers, and confetti celebrations
 - **Highly Configurable**: Extensive parameter control for position, size, color, particle count, duration, and glow intensity
 - **Extensible Architecture**: Easy to create custom explosion effects by extending the base class
 - **Performance Optimized**: Efficient rendering with configurable quality settings
@@ -29,7 +29,8 @@ A comprehensive JavaScript library for creating stunning animated explosion effe
         const canvas = document.getElementById('canvas');
         
         // Create a lightning burst explosion
-        const explosion = new LightningBurst(canvas, {
+        const explosion = new ExplosionEffect(canvas, {
+            type: 'lightning',
             x: 400,
             y: 300,
             color: '#9966ff',
@@ -45,7 +46,7 @@ A comprehensive JavaScript library for creating stunning animated explosion effe
 
 Open `index.html` in your browser to access the full interactive test application with:
 - Real-time parameter adjustment
-- All 6 effect types
+- All 7 effect types
 - Color picker and presets
 - Auto-play mode
 - Click-to-explode functionality
@@ -55,37 +56,43 @@ Open `index.html` in your browser to access the full interactive test applicatio
 ### 1. Lightning Burst
 Electric lightning bolt effects radiating from center
 ```javascript
-new LightningBurst(canvas, { x: 400, y: 300, color: '#9966ff' });
+new ExplosionEffect(canvas, { type: 'lightning', x: 400, y: 300, color: '#9966ff' });
 ```
 
 ### 2. Ring Explosion  
 Concentric rings of particles expanding outward
 ```javascript
-new RingExplosion(canvas, { x: 400, y: 300, color: '#00ff88' });
+new ExplosionEffect(canvas, { type: 'ring', x: 400, y: 300, color: '#00ff88' });
 ```
 
 ### 3. Star Burst
 Star-like explosion with multiple radiating rays
 ```javascript
-new StarBurst(canvas, { x: 400, y: 300, color: '#00aaff' });
+new ExplosionEffect(canvas, { type: 'star', x: 400, y: 300, color: '#00aaff' });
 ```
 
 ### 4. Glow Pulse
 Pulsing energy waves with intense glow effects
 ```javascript
-new GlowPulse(canvas, { x: 400, y: 300, color: '#ffff00' });
+new ExplosionEffect(canvas, { type: 'glow', x: 400, y: 300, color: '#ffff00' });
 ```
 
 ### 5. Fire Explosion
 Realistic fire and smoke explosion with physics
 ```javascript
-new FireExplosion(canvas, { x: 400, y: 300, color: '#ff4400' });
+new ExplosionEffect(canvas, { type: 'fire', x: 400, y: 300, color: '#ff4400' });
 ```
 
 ### 6. Particle Shower
 Cascading particles with trails and bounce physics
 ```javascript
-new ParticleShower(canvas, { x: 400, y: 300, color: '#ffffff' });
+new ExplosionEffect(canvas, { type: 'shower', x: 400, y: 300, color: '#ffffff' });
+```
+
+### 7. Confetti Explosion
+Colorful celebration effect with mixed shapes and realistic physics
+```javascript
+new ExplosionEffect(canvas, { type: 'confetti', x: 400, y: 300, color: '#ff69b4' });
 ```
 
 ## ⚙️ Configuration Options
@@ -107,26 +114,34 @@ Each effect type also has unique options - see the [full documentation](explosio
 
 ## 🛠️ Creating Custom Effects
 
-Extend the base class to create your own explosion effects:
+Add custom effects by creating new type cases in the unified ExplosionEffect class:
 
 ```javascript
-class CustomExplosion extends ExplosionEffect {
+// To add a new effect type, extend the effect type mapping
+// and add initialization and rendering methods to ExplosionEffect class
+
+// Example usage of a custom effect configuration:
+const customExplosion = new ExplosionEffect(canvas, {
+    type: 'custom', // Would need to be added to the class
+    x: 400,
+    y: 300,
+    customProperty: 'value',
+    duration: 3000
+});
+
+// For advanced customization, you can extend the class:
+class CustomExplosionEffect extends ExplosionEffect {
     constructor(canvas, options = {}) {
-        const defaults = {
-            customProperty: 'value'
-        };
-        super(canvas, { ...defaults, ...options });
-        this.initializeEffect();
+        super(canvas, { ...options, type: 'custom' });
     }
     
-    initializeEffect() {
-        // Set up your particles and properties
+    // Override specific methods for custom behavior
+    initializeCustom() {
+        // Custom initialization logic
     }
     
-    render(progress) {
-        // Custom rendering logic (progress: 0 to 1)
-        // Use this.ctx for canvas drawing
-        // Use utility methods like drawParticle(), createParticle()
+    renderCustom(progress) {
+        // Custom rendering logic
     }
 }
 ```
@@ -135,7 +150,7 @@ class CustomExplosion extends ExplosionEffect {
 
 The included `index.html` provides a comprehensive test environment featuring:
 
-- **Effect Gallery**: Try all 6 explosion types
+- **Effect Gallery**: Try all 7 explosion types
 - **Real-time Controls**: Adjust parameters with live preview
 - **Color Picker**: Choose custom colors or use presets
 - **Position Control**: Click canvas to set explosion position
@@ -192,32 +207,33 @@ canvas.addEventListener('click', (event) => {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    new LightningBurst(canvas, { x, y, color: '#9966ff' });
+    new ExplosionEffect(canvas, { type: 'lightning', x, y, color: '#9966ff' });
 });
 ```
 
 ### Random Effect Generator
 ```javascript
-const effects = [LightningBurst, RingExplosion, StarBurst, GlowPulse, FireExplosion, ParticleShower];
-const colors = ['#9966ff', '#00ff88', '#00aaff', '#ffff00', '#ff4400', '#ffffff'];
+const effectTypes = ['lightning', 'ring', 'star', 'glow', 'fire', 'shower', 'confetti'];
+const colors = ['#9966ff', '#00ff88', '#00aaff', '#ffff00', '#ff4400', '#ffffff', '#ff69b4'];
 
 setInterval(() => {
-    const EffectClass = effects[Math.floor(Math.random() * effects.length)];
+    const type = effectTypes[Math.floor(Math.random() * effectTypes.length)];
     const color = colors[Math.floor(Math.random() * colors.length)];
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height;
     
-    new EffectClass(canvas, { x, y, color });
+    new ExplosionEffect(canvas, { type, x, y, color });
 }, 2000);
 ```
 
 ### Effect Sequence
 ```javascript
 // Synchronized multi-effect explosion
-new GlowPulse(canvas, { x: 400, y: 300, color: '#ffff00', duration: 3000 });
-setTimeout(() => new RingExplosion(canvas, { x: 400, y: 300, color: '#00ff88' }), 500);
-setTimeout(() => new LightningBurst(canvas, { x: 400, y: 300, color: '#9966ff' }), 1000);
-setTimeout(() => new FireExplosion(canvas, { x: 400, y: 300, color: '#ff4400' }), 1500);
+new ExplosionEffect(canvas, { type: 'glow', x: 400, y: 300, color: '#ffff00', duration: 3000 });
+setTimeout(() => new ExplosionEffect(canvas, { type: 'ring', x: 400, y: 300, color: '#00ff88' }), 500);
+setTimeout(() => new ExplosionEffect(canvas, { type: 'lightning', x: 400, y: 300, color: '#9966ff' }), 1000);
+setTimeout(() => new ExplosionEffect(canvas, { type: 'fire', x: 400, y: 300, color: '#ff4400' }), 1500);
+setTimeout(() => new ExplosionEffect(canvas, { type: 'confetti', x: 400, y: 300, color: '#ff69b4' }), 2000);
 ```
 
 ## 📋 Browser Support
