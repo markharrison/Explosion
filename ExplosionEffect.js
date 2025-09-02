@@ -517,29 +517,29 @@ class ExplosionEffect {
         this.particles = [];
         this.stellarRays = [];
         
-        // Create main stellar rays (fewer but more prominent than star effect)
-        const numRays = 12;
+        // Create main stellar rays - fewer but much more dramatic
+        const numRays = 8; // Reduce to 8 main rays for more prominence
         for (let i = 0; i < numRays; i++) {
             const angle = (i / numRays) * Math.PI * 2;
             const ray = {
                 angle,
                 particles: [],
-                intensity: 0.8 + Math.random() * 0.4 // Varying intensity per ray
+                intensity: 0.9 + Math.random() * 0.3 // Higher base intensity
             };
             
-            // Multiple particles per ray for the stellar effect
-            for (let j = 0; j < 15; j++) {
-                const speed = 80 + j * 8; // Increasing speed along ray
+            // Create dramatic particles along each ray
+            for (let j = 0; j < 20; j++) { // More particles per ray
+                const speed = 60 + j * 12; // Faster, more dramatic speeds
                 const particle = this.createParticle(
                     this.options.x,
                     this.options.y,
                     Math.cos(angle) * speed,
                     Math.sin(angle) * speed,
-                    3 - j * 0.15, // Longer life for stellar particles
-                    3 + j * 0.2, // Growing size along ray
+                    4 - j * 0.12, // Longer life, slower decay
+                    4 + j * 0.3, // Much larger particles along ray
                     this.options.color
                 );
-                particle.delay = j * 0.02; // Staggered release
+                particle.delay = j * 0.015; // Faster staggered release
                 particle.rayIntensity = ray.intensity;
                 ray.particles.push(particle);
             }
@@ -547,20 +547,20 @@ class ExplosionEffect {
             this.stellarRays.push(ray);
         }
         
-        // Add some random sparkle particles
-        for (let i = 0; i < this.options.particleCount; i++) {
+        // Add prominent sparkle particles around the explosion
+        for (let i = 0; i < this.options.particleCount * 1.5; i++) { // More sparkles
             const angle = Math.random() * Math.PI * 2;
-            const speed = 40 + Math.random() * 80;
+            const speed = 30 + Math.random() * 90;
             const particle = this.createParticle(
-                this.options.x + (Math.random() - 0.5) * 10, // Slight random offset
-                this.options.y + (Math.random() - 0.5) * 10,
+                this.options.x + (Math.random() - 0.5) * 15, // Slightly more spread
+                this.options.y + (Math.random() - 0.5) * 15,
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed,
-                2 + Math.random() * 2,
-                1 + Math.random() * 3,
+                3 + Math.random() * 2, // Longer life
+                2 + Math.random() * 4, // Larger sparkles
                 this.options.color
             );
-            particle.delay = Math.random() * 0.4;
+            particle.delay = Math.random() * 0.3;
             particle.sparkle = true;
             this.particles.push(particle);
         }
@@ -607,51 +607,62 @@ class ExplosionEffect {
 
     /**
      * Stellar Effect Rendering
-     * Creates a growing star with translucent orb and radiating particles
+     * Creates a dramatic stellar explosion with prominent central orb and radiating particles
      */
     renderStellar(progress) {
-        // Central orb that grows and becomes more translucent over time
-        const orbGrowth = Math.min(progress * 2, 1); // Orb grows faster in first half
-        const orbSize = 10 * this.options.size + (orbGrowth * 30 * this.options.size);
-        const orbAlpha = Math.max(0, (1 - progress) * 0.6); // Translucent, fades over time
+        // Central orb that grows dramatically and remains highly visible
+        const orbGrowth = Math.min(progress * 1.5, 1); // Slower, more controlled growth
+        const orbSize = 25 * this.options.size + (orbGrowth * 60 * this.options.size); // Much larger orb
+        const orbAlpha = Math.max(0, (1 - progress * 0.7) * 0.9); // More opaque, slower fade
         
-        // Draw central orb with multiple layers for depth
+        // Draw central orb with multiple layers for dramatic effect
         if (orbAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
-            // Outer glow layer
+            // Massive outer glow layer
             this.ctx.save();
-            this.ctx.globalAlpha = orbAlpha * 0.3;
+            this.ctx.globalAlpha = orbAlpha * 0.4;
             this.ctx.shadowColor = this.options.color;
-            this.ctx.shadowBlur = 60 * this.options.glowIntensity;
+            this.ctx.shadowBlur = 120 * this.options.glowIntensity; // Double the glow
+            this.ctx.fillStyle = this.options.color;
+            this.ctx.beginPath();
+            this.ctx.arc(this.options.x, this.options.y, orbSize * 2, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+            
+            // Secondary glow layer
+            this.ctx.save();
+            this.ctx.globalAlpha = orbAlpha * 0.6;
+            this.ctx.shadowColor = this.options.color;
+            this.ctx.shadowBlur = 80 * this.options.glowIntensity;
             this.ctx.fillStyle = this.options.color;
             this.ctx.beginPath();
             this.ctx.arc(this.options.x, this.options.y, orbSize * 1.5, 0, Math.PI * 2);
             this.ctx.fill();
             this.ctx.restore();
             
-            // Main orb
+            // Main orb - much more prominent
             this.ctx.save();
             this.ctx.globalAlpha = orbAlpha;
             this.ctx.shadowColor = this.options.color;
-            this.ctx.shadowBlur = 40 * this.options.glowIntensity;
+            this.ctx.shadowBlur = 60 * this.options.glowIntensity;
             this.ctx.fillStyle = this.options.color;
             this.ctx.beginPath();
             this.ctx.arc(this.options.x, this.options.y, orbSize, 0, Math.PI * 2);
             this.ctx.fill();
             this.ctx.restore();
             
-            // Inner bright core
+            // Brilliant inner core
             this.ctx.save();
-            this.ctx.globalAlpha = orbAlpha * 1.5;
+            this.ctx.globalAlpha = orbAlpha * 1.2;
             this.ctx.shadowColor = this.options.color;
-            this.ctx.shadowBlur = 20 * this.options.glowIntensity;
+            this.ctx.shadowBlur = 40 * this.options.glowIntensity;
             this.ctx.fillStyle = this.options.color;
             this.ctx.beginPath();
-            this.ctx.arc(this.options.x, this.options.y, orbSize * 0.4, 0, Math.PI * 2);
+            this.ctx.arc(this.options.x, this.options.y, orbSize * 0.5, 0, Math.PI * 2);
             this.ctx.fill();
             this.ctx.restore();
         }
 
-        // Render stellar rays
+        // Render stellar rays with dramatic prominence
         if (this.stellarRays && this.stellarRays.length > 0) {
             this.stellarRays.forEach(ray => {
                 ray.particles.forEach(particle => {
@@ -661,14 +672,26 @@ class ExplosionEffect {
                         particle.x += particle.vx * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
                         particle.y += particle.vy * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
                         
-                        // Calculate alpha with ray intensity
-                        const alpha = Math.max(0, (1 - particleProgress) * particle.rayIntensity);
+                        // Calculate alpha with ray intensity - more prominent
+                        const alpha = Math.max(0, (1 - particleProgress * 0.8) * particle.rayIntensity);
                         
                         if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+                            // Draw large glowing particle with massive glow
+                            this.ctx.save();
+                            this.ctx.globalAlpha = alpha * 0.8;
+                            this.ctx.shadowColor = particle.color;
+                            this.ctx.shadowBlur = 30 * this.options.glowIntensity * alpha; // Massive glow
+                            this.ctx.fillStyle = particle.color;
+                            this.ctx.beginPath();
+                            this.ctx.arc(particle.x, particle.y, particle.size * alpha * 2, 0, Math.PI * 2); // Double particle size
+                            this.ctx.fill();
+                            this.ctx.restore();
+                            
+                            // Add bright core
                             this.ctx.save();
                             this.ctx.globalAlpha = alpha;
                             this.ctx.shadowColor = particle.color;
-                            this.ctx.shadowBlur = 12 * this.options.glowIntensity * alpha;
+                            this.ctx.shadowBlur = 15 * this.options.glowIntensity * alpha;
                             this.ctx.fillStyle = particle.color;
                             this.ctx.beginPath();
                             this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
@@ -680,7 +703,7 @@ class ExplosionEffect {
             });
         }
 
-        // Render sparkle particles
+        // Render prominent sparkle particles
         if (this.particles && this.particles.length > 0) {
             this.particles.forEach(particle => {
                 if (particle.sparkle) {
@@ -689,18 +712,19 @@ class ExplosionEffect {
                         particle.x += particle.vx * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
                         particle.y += particle.vy * particleProgress * EXPLOSION_CONSTANTS.ANIMATION_SPEED;
                         
-                        // Sparkle effect with twinkling
+                        // Enhanced sparkle effect with twinkling
                         const twinkle = Math.sin(Date.now() * 0.01 + particle.x * 0.1) * 0.3 + 0.7;
-                        const alpha = Math.max(0, (1 - particleProgress) * twinkle);
+                        const alpha = Math.max(0, (1 - particleProgress * 0.9) * twinkle);
                         
                         if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
+                            // Larger sparkle with more prominent glow
                             this.ctx.save();
-                            this.ctx.globalAlpha = alpha;
+                            this.ctx.globalAlpha = alpha * 0.8;
                             this.ctx.shadowColor = particle.color;
-                            this.ctx.shadowBlur = 8 * this.options.glowIntensity * alpha;
+                            this.ctx.shadowBlur = 20 * this.options.glowIntensity * alpha; // Bigger glow
                             this.ctx.fillStyle = particle.color;
                             this.ctx.beginPath();
-                            this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+                            this.ctx.arc(particle.x, particle.y, particle.size * alpha * 1.5, 0, Math.PI * 2); // Larger sparkles
                             this.ctx.fill();
                             this.ctx.restore();
                         }
