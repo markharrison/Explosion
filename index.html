@@ -475,13 +475,26 @@
             }
             
             startFPSCounter() {
-                setInterval(() => {
-                    const now = Date.now();
-                    const deltaTime = now - this.lastFrameTime;
-                    this.fps = Math.round(1000 / deltaTime);
-                    document.getElementById('fps').textContent = this.fps + ' FPS';
-                    this.lastFrameTime = now;
-                }, 1000);
+                let lastTime = Date.now();
+                let frameCount = 0;
+                
+                const measureFPS = () => {
+                    frameCount++;
+                    const currentTime = Date.now();
+                    
+                    // Update FPS every second
+                    if (currentTime - lastTime >= 1000) {
+                        this.fps = Math.round(frameCount * 1000 / (currentTime - lastTime));
+                        document.getElementById('fps').textContent = this.fps + ' FPS';
+                        
+                        frameCount = 0;
+                        lastTime = currentTime;
+                    }
+                    
+                    requestAnimationFrame(measureFPS);
+                };
+                
+                measureFPS();
             }
         }
         

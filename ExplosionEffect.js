@@ -44,7 +44,9 @@ class ExplosionEffect {
         this.isRunning = false;
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
+            this.animationId = null;
         }
+        this.cleanup(); // Ensure cleanup is called when stopping
     }
     
     clear() {
@@ -65,6 +67,15 @@ class ExplosionEffect {
             this.animationId = requestAnimationFrame(() => this.animate());
         } else {
             this.isRunning = false;
+            this.cleanup(); // Clean up memory when animation ends
+        }
+    }
+    
+    cleanup() {
+        // Override in subclasses to clean up particle arrays and other memory objects
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
         }
     }
     
@@ -209,6 +220,11 @@ class LightningBurst extends ExplosionEffect {
             });
         }
     }
+    
+    cleanup() {
+        super.cleanup();
+        this.lightningBolts = []; // Clear lightning bolts array to free memory
+    }
 }
 
 // Ring Explosion Effect
@@ -282,6 +298,11 @@ class RingExplosion extends ExplosionEffect {
         this.ctx.arc(this.options.x, this.options.y, ringRadius, 0, Math.PI * 2);
         this.ctx.stroke();
         this.ctx.restore();
+    }
+    
+    cleanup() {
+        super.cleanup();
+        this.particles = []; // Clear particles array to free memory
     }
 }
 
@@ -375,6 +396,11 @@ class StarBurst extends ExplosionEffect {
             });
         }
     }
+    
+    cleanup() {
+        super.cleanup();
+        this.particles = []; // Clear particles array to free memory
+    }
 }
 
 // Glow Pulse Effect
@@ -430,6 +456,11 @@ class GlowPulse extends ExplosionEffect {
         this.ctx.arc(this.options.x, this.options.y, coreSize, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.restore();
+    }
+    
+    cleanup() {
+        super.cleanup();
+        // GlowPulse doesn't have particle arrays, just the basic cleanup
     }
 }
 
@@ -490,6 +521,10 @@ class FireExplosion extends ExplosionEffect {
     }
     
     render(progress) {
+        // Add fade-in effect for the first 20% of the animation
+        const fadeInProgress = Math.min(progress / 0.2, 1);
+        const fadeInFactor = fadeInProgress;
+        
         // Update and draw fire particles
         if (this.fireParticles && this.fireParticles.length > 0) {
             this.fireParticles.forEach(particle => {
@@ -501,17 +536,20 @@ class FireExplosion extends ExplosionEffect {
                 const newL = particle.originalColor.l * (1 - colorProgress * 0.8);
                 particle.color = this.hslToRgb(particle.originalColor.h, particle.originalColor.s, newL);
                 
-                const alpha = Math.max(0, 1 - progress);
+                // Apply both fade-in and fade-out
+                const alpha = Math.max(0, (1 - progress) * fadeInFactor);
                 
-                this.ctx.save();
-                this.ctx.globalAlpha = alpha;
-                this.ctx.shadowColor = particle.color;
-                this.ctx.shadowBlur = 12 * this.options.glowIntensity;
-                this.ctx.fillStyle = particle.color;
-                this.ctx.beginPath();
-                this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.restore();
+                if (alpha > 0) {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = alpha;
+                    this.ctx.shadowColor = particle.color;
+                    this.ctx.shadowBlur = 12 * this.options.glowIntensity * alpha;
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                }
             });
         }
         
@@ -524,20 +562,27 @@ class FireExplosion extends ExplosionEffect {
                     particle.y += particle.vy * smokeProgress * 0.015;
                     particle.size = particle.startSize * (1 + particle.growth * smokeProgress);
                     
-                    const alpha = Math.max(0, (1 - smokeProgress) * 0.6);
+                    // Apply fade-in to smoke as well
+                    const alpha = Math.max(0, (1 - smokeProgress) * 0.6 * fadeInFactor);
                     
-                    this.ctx.save();
-                    this.ctx.globalAlpha = alpha;
-                    this.ctx.fillStyle = particle.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    this.ctx.restore();
+                    if (alpha > 0) {
+                        this.ctx.save();
+                        this.ctx.globalAlpha = alpha;
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.restore();
+                    }
                 }
             });
         }
-        
-
+    }
+    
+    cleanup() {
+        super.cleanup();
+        this.fireParticles = []; // Clear particle arrays to free memory
+        this.smokeParticles = [];
     }
 }
 
@@ -617,14 +662,19 @@ class ParticleShower extends ExplosionEffect {
                 this.ctx.save();
                 this.ctx.globalAlpha = alpha;
                 this.ctx.shadowColor = particle.color;
-                this.ctx.shadowBlur = 8 * this.options.glowIntensity;
+                this.ctx.shadowBlur = 8 * this.options.glowIntensity * alpha;
                 this.ctx.fillStyle = particle.color;
                 this.ctx.beginPath();
-                this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
                 this.ctx.fill();
                 this.ctx.restore();
             });
         }
+    }
+    
+    cleanup() {
+        super.cleanup();
+        this.particles = []; // Clear particle array to free memory
     }
 }
 
@@ -633,7 +683,7 @@ class ConfettiExplosion extends ExplosionEffect {
     constructor(canvas, options = {}) {
         const defaults = {
             color: '#ff69b4',
-            particleCount: 80,
+            particleCount: 60, // Reduced from 80 for better performance
             glowIntensity: 0.5,
             duration: 3000
         };
@@ -645,7 +695,7 @@ class ConfettiExplosion extends ExplosionEffect {
     initializeConfetti() {
         this.confettiPieces = [];
         
-        // Confetti colors for celebration
+        // Confetti colors for celebration - more vibrant and distinct
         const confettiColors = [
             '#ff69b4', // Hot pink
             '#00bfff', // Deep sky blue
@@ -661,23 +711,25 @@ class ConfettiExplosion extends ExplosionEffect {
         
         for (let i = 0; i < this.options.particleCount; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 50 + Math.random() * 150;
+            const speed = 80 + Math.random() * 120; // Faster initial speed
             const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
             
             const piece = {
                 x: this.options.x,
                 y: this.options.y,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 30, // Slight upward bias
-                width: 4 + Math.random() * 8,
-                height: 6 + Math.random() * 12,
+                vy: Math.sin(angle) * speed - 50, // More upward bias
+                width: 6 + Math.random() * 10, // Larger pieces
+                height: 8 + Math.random() * 16, // More varied sizes
                 rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: (Math.random() - 0.5) * 0.3,
+                rotationSpeed: (Math.random() - 0.5) * 0.4, // Faster rotation
                 color: color,
-                gravity: 100 + Math.random() * 50,
-                airResistance: 0.98,
+                gravity: 150 + Math.random() * 75, // Stronger gravity for faster falling
+                airResistance: 0.96, // More air resistance
                 life: 1,
-                flutter: Math.random() * 0.02 + 0.01 // Add flutter motion
+                flutter: Math.random() * 0.03 + 0.02, // More pronounced flutter
+                twirl: Math.random() * 0.1 + 0.05, // Add twirling motion
+                shape: Math.random() < 0.7 ? 'rectangle' : 'diamond' // Mix of shapes
             };
             
             this.confettiPieces.push(piece);
@@ -686,24 +738,31 @@ class ConfettiExplosion extends ExplosionEffect {
     
     render(progress) {
         if (this.confettiPieces && this.confettiPieces.length > 0) {
+            // Pre-calculate time-based values outside the loop for better performance
+            const time = Date.now() * 0.001;
+            
             this.confettiPieces.forEach(piece => {
                 // Update position with physics
                 piece.vx *= piece.airResistance; // Air resistance
                 piece.vy += piece.gravity * progress * 0.02; // Gravity
                 
-                // Add flutter effect (horizontal sway)
-                piece.vx += Math.sin(Date.now() * piece.flutter) * 2;
+                // Enhanced flutter effect (horizontal sway with twirl) - optimized
+                const flutterOffset = Math.sin(time * piece.flutter) * 3;
+                const twirlOffset = Math.cos(time * piece.twirl) * 1;
+                
+                piece.vx += flutterOffset;
+                piece.x += twirlOffset;
                 
                 piece.x += piece.vx * progress * 0.02;
                 piece.y += piece.vy * progress * 0.02;
                 
-                // Update rotation
-                piece.rotation += piece.rotationSpeed;
+                // Update rotation with more dynamic movement
+                piece.rotation += piece.rotationSpeed * (1 + Math.sin(time * piece.flutter) * 0.5);
                 
-                // Calculate alpha based on progress and position
-                const alpha = Math.max(0, 1 - progress * 0.8);
+                // Calculate alpha to fully fade out by the end
+                const alpha = Math.max(0, 1 - progress);
                 
-                if (alpha > 0) {
+                if (alpha > 0.01) { // Only render if alpha is significant
                     this.ctx.save();
                     this.ctx.globalAlpha = alpha;
                     
@@ -711,21 +770,39 @@ class ConfettiExplosion extends ExplosionEffect {
                     this.ctx.translate(piece.x, piece.y);
                     this.ctx.rotate(piece.rotation);
                     
-                    // Draw confetti piece as a rectangle
+                    // Set color and glow
                     this.ctx.fillStyle = piece.color;
                     
-                    // Add subtle glow if enabled
-                    if (this.options.glowIntensity > 0) {
+                    // Add subtle glow if enabled (reduce glow calculation overhead)
+                    if (this.options.glowIntensity > 0 && alpha > 0.1) {
                         this.ctx.shadowColor = piece.color;
-                        this.ctx.shadowBlur = 3 * this.options.glowIntensity;
+                        this.ctx.shadowBlur = 3 * this.options.glowIntensity * alpha;
                     }
                     
-                    this.ctx.fillRect(-piece.width/2, -piece.height/2, piece.width, piece.height);
+                    // Draw different shapes
+                    if (piece.shape === 'diamond') {
+                        // Draw diamond shape
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(0, -piece.height/2);
+                        this.ctx.lineTo(piece.width/2, 0);
+                        this.ctx.lineTo(0, piece.height/2);
+                        this.ctx.lineTo(-piece.width/2, 0);
+                        this.ctx.closePath();
+                        this.ctx.fill();
+                    } else {
+                        // Draw rectangle
+                        this.ctx.fillRect(-piece.width/2, -piece.height/2, piece.width, piece.height);
+                    }
                     
                     this.ctx.restore();
                 }
             });
         }
+    }
+    
+    cleanup() {
+        super.cleanup();
+        this.confettiPieces = []; // Clear particle array to free memory
     }
 }
 
