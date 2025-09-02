@@ -9,7 +9,10 @@ const EXPLOSION_CONSTANTS = {
     // Animation constants
     ANIMATION_SPEED: 0.02,
     ANIMATION_SPEED_FIRE: 0.015,
+    ANIMATION_SPEED_SHOWER: 0.02,
+    ANIMATION_SPEED_CONFETTI: 0.02,
     ALPHA_THRESHOLD: 0.01,
+    ALPHA_THRESHOLD_GLOW: 0.1,
     FADE_IN_DURATION: 0.2,
     
     // Physics constants
@@ -731,8 +734,8 @@ class ExplosionEffect {
                 }
                 
                 // Update position
-                particle.x += particle.vx * progress * 0.02;
-                particle.y += particle.vy * progress * 0.02 + particle.gravity * progress * 0.02;
+                particle.x += particle.vx * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_SHOWER;
+                particle.y += particle.vy * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_SHOWER + particle.gravity * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_SHOWER;
                 
                 // Bounce off bottom
                 if (particle.y > this.canvas.height - 10) {
@@ -744,7 +747,7 @@ class ExplosionEffect {
                 // Draw trail
                 particle.trail.forEach((pos, index) => {
                     const trailAlpha = (1 - index / particle.trail.length) * Math.max(0, 1 - progress);
-                    if (trailAlpha > 0.01) {
+                    if (trailAlpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
                         this.ctx.save();
                         this.ctx.globalAlpha = trailAlpha;
                         this.ctx.fillStyle = particle.color;
@@ -758,7 +761,7 @@ class ExplosionEffect {
                 
                 // Draw particle
                 const alpha = Math.max(0, 1 - progress);
-                if (alpha > 0.01) {
+                if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) {
                     this.ctx.save();
                     this.ctx.globalAlpha = alpha;
                     this.ctx.shadowColor = particle.color;
@@ -826,7 +829,7 @@ class ExplosionEffect {
             this.confettiPieces.forEach(piece => {
                 // Update position with physics
                 piece.vx *= piece.airResistance; // Air resistance
-                piece.vy += piece.gravity * progress * 0.02; // Gravity
+                piece.vy += piece.gravity * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_CONFETTI; // Gravity
                 
                 // Enhanced flutter effect (horizontal sway with twirl) - optimized
                 const flutterOffset = Math.sin(time * piece.flutter) * 3;
@@ -835,8 +838,8 @@ class ExplosionEffect {
                 piece.vx += flutterOffset;
                 piece.x += twirlOffset;
                 
-                piece.x += piece.vx * progress * 0.02;
-                piece.y += piece.vy * progress * 0.02;
+                piece.x += piece.vx * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_CONFETTI;
+                piece.y += piece.vy * progress * EXPLOSION_CONSTANTS.ANIMATION_SPEED_CONFETTI;
                 
                 // Update rotation with more dynamic movement
                 piece.rotation += piece.rotationSpeed * (1 + Math.sin(time * piece.flutter) * 0.5);
@@ -844,7 +847,7 @@ class ExplosionEffect {
                 // Calculate alpha to fully fade out by the end
                 const alpha = Math.max(0, 1 - progress);
                 
-                if (alpha > 0.01) { // Only render if alpha is significant
+                if (alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD) { // Only render if alpha is significant
                     this.ctx.save();
                     this.ctx.globalAlpha = alpha;
                     
@@ -856,7 +859,7 @@ class ExplosionEffect {
                     this.ctx.fillStyle = piece.color;
                     
                     // Add subtle glow if enabled (reduce glow calculation overhead)
-                    if (this.options.glowIntensity > 0 && alpha > 0.1) {
+                    if (this.options.glowIntensity > 0 && alpha > EXPLOSION_CONSTANTS.ALPHA_THRESHOLD_GLOW) {
                         this.ctx.shadowColor = piece.color;
                         this.ctx.shadowBlur = 3 * this.options.glowIntensity * alpha;
                     }
